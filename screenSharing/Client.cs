@@ -44,7 +44,7 @@ namespace screenSharing
                 return ms.ToArray();
             }
         }
-        private Image GetCompressedBitmap(Bitmap bmp, long quality)
+        private byte[] GetCompressedBitmap(Bitmap bmp, long quality)
         {
             using (var mss = new MemoryStream())
             {
@@ -53,7 +53,7 @@ namespace screenSharing
                 EncoderParameters parameters = new EncoderParameters(1);
                 parameters.Param[0] = qualityParam;
                 bmp.Save(mss, imageCodec, parameters);
-                return Image.FromStream(mss);
+                return mss.ToArray();
             }
         }
 
@@ -70,13 +70,13 @@ namespace screenSharing
             while (isClick)
             {
                 curr = screenCapture();
-                jpeg = GetCompressedBitmap(curr, 100L);
+               
                 currHash = curr.GetHashCode();
                 if (currHash != prevHash)
                 {
 
-                    compressed = imageCompress(jpeg);
-                    binFor.Serialize(ns, compressed);
+                    /*compressed = imageCompress(jpeg);*/
+                    binFor.Serialize(ns, GetCompressedBitmap(curr,60L));
                 }
                 prevHash = currHash;
             }
