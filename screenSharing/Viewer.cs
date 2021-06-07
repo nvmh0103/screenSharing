@@ -65,7 +65,7 @@ namespace screenSharing
             BinaryFormatter binFor = new BinaryFormatter();
             while (client.Connected)
             {
-                JpegBitmapEncoder encoder = new JpegBitmapEncoder();
+                
                 
                 mainStream = client.GetStream();
                 byte[] imageBytes = (byte[])binFor.Deserialize(mainStream);
@@ -96,7 +96,8 @@ namespace screenSharing
         private void connect()
         {
             /*26.249.38.179*/
-            client1.Connect("192.168.1.10", 8081);
+            /*192.168.1.10*/
+            client1.Connect("192.168.1.6", 8081);
 
         }
         private void textBox1_TextChanged(object sender, EventArgs e)

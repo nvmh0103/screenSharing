@@ -12,6 +12,7 @@ using System.Drawing.Imaging;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using System.Net;
+using System.IO;
 
 namespace screenSharing
 {
@@ -36,9 +37,26 @@ namespace screenSharing
         }
         private byte[] imageCompress(Image img)
         {
-            ImageConverter converter = new ImageConverter();
-            return (byte[])converter.ConvertTo(img, typeof(byte[]));
+            using (var ms = new MemoryStream())
+            {
+                Bitmap bmp = new Bitmap(img);
+                bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
+                return ms.ToArray();
+            }
         }
+        private Image GetCompressedBitmap(Bitmap bmp, long quality)
+        {
+            using (var mss = new MemoryStream())
+            {
+                EncoderParameter qualityParam = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, quality);
+                ImageCodecInfo imageCodec = ImageCodecInfo.GetImageEncoders().FirstOrDefault(o => o.FormatID == ImageFormat.Jpeg.Guid);
+                EncoderParameters parameters = new EncoderParameters(1);
+                parameters.Param[0] = qualityParam;
+                bmp.Save(mss, imageCodec, parameters);
+                return Image.FromStream(mss);
+            }
+        }
+
 
         private void send()
         {
@@ -46,16 +64,18 @@ namespace screenSharing
             BinaryFormatter binFor = new BinaryFormatter();
             ns = client.GetStream();
             Bitmap curr;
+            Image jpeg;
             byte[] compressed;
             int prevHash=0, currHash=0;
             while (isClick)
             {
                 curr = screenCapture();
+                jpeg = GetCompressedBitmap(curr, 100L);
                 currHash = curr.GetHashCode();
                 if (currHash != prevHash)
                 {
 
-                    compressed = imageCompress(curr);
+                    compressed = imageCompress(jpeg);
                     binFor.Serialize(ns, compressed);
                 }
                 prevHash = currHash;
@@ -109,8 +129,9 @@ namespace screenSharing
         }
         private void button1_Click(object sender, EventArgs e)
         {
-            
-                /*26.242.248.193*/
+
+            /*26.242.248.193*/
+            /*192.168.1.11*/
                 client.Connect("192.168.1.11", 8080);
  
             
