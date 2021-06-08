@@ -13,7 +13,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using System.Net;
 using System.IO;
-
+using System.Linq;
 namespace screenSharing
 {
     public partial class Client : Form
@@ -56,7 +56,15 @@ namespace screenSharing
                 return mss.ToArray();
             }
         }
-
+        public void Split<T>(T[] array,int index,out T[] first, out T[] second)
+        {
+            first = array.Take(index).ToArray();
+            second = array.Skip(index).ToArray();
+        }
+        public void SplitMidPoint<T>(T[] array, out T[] first, out T[] second)
+        {
+            Split(array, array.Length / 2, out first, out second);
+        }
 
         private void send()
         {
@@ -64,7 +72,7 @@ namespace screenSharing
             BinaryFormatter binFor = new BinaryFormatter();
             Bitmap curr;
             Image jpeg;
-            byte[] compressed;
+            byte[] compressed = new byte[1024];
             int prevHash=0, currHash=0;
             while (isClick)
             {
@@ -72,16 +80,19 @@ namespace screenSharing
                 currHash = curr.GetHashCode();
                 if (currHash != prevHash)
                 {
-                    compressed = GetCompressedBitmap(curr, 60L);
+                    compressed = GetCompressedBitmap(curr, 50L);
+                    byte[] compressed1, compressed2;
+                    SplitMidPoint(compressed, out compressed1, out compressed2);
                     try
                     {
-                        client.Send(compressed, compressed.Length);
-
+                        client.Send(compressed1, compressed1.Length);
+                        client.Send(compressed2, compressed2.Length);
                     } catch (SocketException ex)
                     {
 
                     }
-/*                    binFor.Serialize(ns, GetCompressedBitmap(curr,60L));*/
+
+                     /* binFor.Serialize(ns, GetCompressedBitmap(curr,60L));*/
                 }
                 prevHash = currHash;
             }
@@ -137,7 +148,7 @@ namespace screenSharing
 
             /*26.242.248.193*/
             /*192.168.1.11*/
-                client.Connect("127.0.0.1", 8080);
+                client.Connect("192.168.1.11", 8080);
  
             
         }

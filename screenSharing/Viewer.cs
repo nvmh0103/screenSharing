@@ -35,15 +35,45 @@ namespace screenSharing
         {
             connect();
             client = new UdpClient(8080);
+            int count = 0;
+            byte[] temp1 = Array.Empty<byte>();
+            byte[] temp2 = Array.Empty<byte>();
             while (true)
             {
+
                 IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
                 var receiveBytes = await client.ReceiveAsync();
-                pictureBox1.Image = (Image)ByteToImage(receiveBytes.Buffer);
-            }
-            
+                if (count == 0)
+                {
 
-            
+                    temp1 = receiveBytes.Buffer;
+                    if (temp1.Length == 0)
+                    {
+                        continue;
+                    }
+                    count++;
+                    continue;
+                }
+                if (count == 1)
+                {
+                    temp2 = receiveBytes.Buffer;
+                    if (temp2.Length != 0)
+                    {
+                        var res = temp1.Concat(temp2).ToArray();
+                        pictureBox1.Image = (Image)ByteToImage(res);
+                        count = 0;
+                    }
+                    else
+                    {
+                        count = 0;
+                        continue;
+                    }
+
+                }
+            }
+
+
+
         }
         private void stopListening()
         {
@@ -100,7 +130,7 @@ namespace screenSharing
         {
             /*26.249.38.179*/
             /*192.168.1.10*/
-            client1.Connect("127.0.0.1", 8081);
+            client1.Connect("192.168.1.10", 8081);
 
         }
         private void textBox1_TextChanged(object sender, EventArgs e)
