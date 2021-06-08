@@ -18,7 +18,7 @@ namespace screenSharing
 {
     public partial class Client : Form
     {
-        private TcpClient client = new TcpClient();
+        private UdpClient client = new UdpClient();
         private TcpClient client1 = new TcpClient();
         private NetworkStream ns;
         bool isClick = true;
@@ -62,7 +62,6 @@ namespace screenSharing
         {
 
             BinaryFormatter binFor = new BinaryFormatter();
-            ns = client.GetStream();
             Bitmap curr;
             Image jpeg;
             byte[] compressed;
@@ -70,13 +69,19 @@ namespace screenSharing
             while (isClick)
             {
                 curr = screenCapture();
-               
                 currHash = curr.GetHashCode();
                 if (currHash != prevHash)
                 {
+                    compressed = GetCompressedBitmap(curr, 60L);
+                    try
+                    {
+                        client.Send(compressed, compressed.Length);
 
-                    /*compressed = imageCompress(jpeg);*/
-                    binFor.Serialize(ns, GetCompressedBitmap(curr,60L));
+                    } catch (SocketException ex)
+                    {
+
+                    }
+/*                    binFor.Serialize(ns, GetCompressedBitmap(curr,60L));*/
                 }
                 prevHash = currHash;
             }
@@ -106,7 +111,7 @@ namespace screenSharing
             {
                 sendBack inf = (sendBack)binFor.Deserialize(ns);
                 Point test = inf.getMouse();
-                textBox1.Text = "X: " + test.X + " Y: " + test.Y;
+                /*textBox1.Text = "X: " + test.X + " Y: " + test.Y;*/
                 test.X = test.X * 1366 / 1856;
                 test.Y = test.Y * 768 / 1054;
                 Cursor.Position = test;
@@ -132,7 +137,7 @@ namespace screenSharing
 
             /*26.242.248.193*/
             /*192.168.1.11*/
-                client.Connect("192.168.1.11", 8080);
+                client.Connect("127.0.0.1", 8080);
  
             
         }
@@ -149,7 +154,7 @@ namespace screenSharing
         private void Client_FormClosing(object sender, FormClosingEventArgs e)
         {
             isClick = false;
-            ns.Close();
+            /*ns.Close();*/
             client.Close();
         }
 

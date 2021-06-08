@@ -18,7 +18,7 @@ namespace screenSharing
 {
     public partial class Viewer : Form
     {
-        private TcpClient client;
+        private UdpClient client;
         private TcpListener server;
         private NetworkStream mainStream;
 
@@ -27,18 +27,23 @@ namespace screenSharing
         public Viewer()
         {
             InitializeComponent();
-            client = new TcpClient();
+            client = new UdpClient();
             Listen = new Thread(startListening);
-            getImage = new Thread(receiveImage);
+            /*getImage = new Thread(receiveImage);*/
         }
-        private void startListening()
+        private async void startListening()
         {
-            while (!client.Connected)
+            connect();
+            client = new UdpClient(8080);
+            while (true)
             {
-                server.Start();
-                client = server.AcceptTcpClient();
+                IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
+                var receiveBytes = await client.ReceiveAsync();
+                pictureBox1.Image = (Image)ByteToImage(receiveBytes.Buffer);
             }
-            getImage.Start();
+            
+
+            
         }
         private void stopListening()
         {
@@ -59,24 +64,22 @@ namespace screenSharing
             }
             return bmp;
         }
-        private void receiveImage()
+    /*    private void receiveImage()
         {
             connect();
             BinaryFormatter binFor = new BinaryFormatter();
             while (client.Connected)
             {
                 
-                
                 mainStream = client.GetStream();
                 byte[] imageBytes = (byte[])binFor.Deserialize(mainStream);
                 pictureBox1.Image = (Image)ByteToImage(imageBytes);
             }
-        }
+        }*/
 
         private void Viewer_Load(object sender, EventArgs e)
         {
             this.WindowState = FormWindowState.Maximized;
-            server = new TcpListener(IPAddress.Any, 8080);
             Listen.Start();
             
         }
@@ -97,7 +100,7 @@ namespace screenSharing
         {
             /*26.249.38.179*/
             /*192.168.1.10*/
-            client1.Connect("192.168.1.6", 8081);
+            client1.Connect("127.0.0.1", 8081);
 
         }
         private void textBox1_TextChanged(object sender, EventArgs e)
