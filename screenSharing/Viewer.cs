@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -18,7 +19,7 @@ namespace screenSharing
 {
     public partial class Viewer : Form
     {
-        private UdpClient client;
+        private TcpClient client;
         private TcpListener server;
         private NetworkStream mainStream;
 
@@ -27,53 +28,18 @@ namespace screenSharing
         public Viewer()
         {
             InitializeComponent();
-            client = new UdpClient();
+            client = new TcpClient();
             Listen = new Thread(startListening);
-            /*getImage = new Thread(receiveImage);*/
+            getImage = new Thread(receiveImage);
         }
-        private async void startListening()
+        private void startListening()
         {
-            connect();
-            client = new UdpClient(8080);
-            int count = 0;
-            byte[] temp1 = Array.Empty<byte>();
-            byte[] temp2 = Array.Empty<byte>();
-            while (true)
+            while (!client.Connected)
             {
-
-                IPEndPoint remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
-                var receiveBytes = await client.ReceiveAsync();
-                if (count == 0)
-                {
-
-                    temp1 = receiveBytes.Buffer;
-                    if (temp1.Length == 0)
-                    {
-                        continue;
-                    }
-                    count++;
-                    continue;
-                }
-                if (count == 1)
-                {
-                    temp2 = receiveBytes.Buffer;
-                    if (temp2.Length != 0)
-                    {
-                        var res = temp1.Concat(temp2).ToArray();
-                        pictureBox1.Image = (Image)ByteToImage(res);
-                        count = 0;
-                    }
-                    else
-                    {
-                        count = 0;
-                        continue;
-                    }
-
-                }
+                server.Start();
+                client = server.AcceptTcpClient();
             }
-
-
-
+            getImage.Start();
         }
         private void stopListening()
         {
@@ -94,24 +60,27 @@ namespace screenSharing
             }
             return bmp;
         }
-    /*    private void receiveImage()
+        private void receiveImage()
         {
             connect();
             BinaryFormatter binFor = new BinaryFormatter();
             while (client.Connected)
             {
-                
+
+
                 mainStream = client.GetStream();
-                byte[] imageBytes = (byte[])binFor.Deserialize(mainStream);
+                byte[] imageBytes = new byte[200000];
+                mainStream.Read(imageBytes, 0, imageBytes.Length);
                 pictureBox1.Image = (Image)ByteToImage(imageBytes);
             }
-        }*/
+        }
 
         private void Viewer_Load(object sender, EventArgs e)
         {
             this.WindowState = FormWindowState.Maximized;
+            server = new TcpListener(IPAddress.Any, 8080);
             Listen.Start();
-            
+
         }
 
         private void Viewer_FormClosing(object sender, FormClosingEventArgs e)
@@ -121,10 +90,10 @@ namespace screenSharing
 
         private void Viewer_MouseMove(object sender, MouseEventArgs e)
         {
-            
+
         }
 
-       
+
         TcpClient client1 = new TcpClient();
         private void connect()
         {
@@ -145,8 +114,8 @@ namespace screenSharing
                 NetworkStream ns1 = client1.GetStream();
                 BinaryFormatter binFor = new BinaryFormatter();
                 Point cursor = new Point(e.X, e.Y);
-                sendBack inf = new sendBack(cursor, false,false,false);
-                binFor.Serialize(ns1, inf);       
+                sendBack inf = new sendBack(cursor, false, false, false);
+                binFor.Serialize(ns1, inf);
             }
         }
 
@@ -159,12 +128,12 @@ namespace screenSharing
                 Point cursor = new Point(e.X, e.Y);
                 if (e.Button == MouseButtons.Left)
                 {
-                    sendBack inf = new sendBack(cursor, true, false,false);
+                    sendBack inf = new sendBack(cursor, true, false, false);
                     binFor.Serialize(ns1, inf);
                 }
-                else if (e.Button== MouseButtons.Right)
+                else if (e.Button == MouseButtons.Right)
                 {
-                    sendBack inf1 = new sendBack(cursor, false, false,true);
+                    sendBack inf1 = new sendBack(cursor, false, false, true);
                     binFor.Serialize(ns1, inf1);
                 }
             }
@@ -177,7 +146,7 @@ namespace screenSharing
                 NetworkStream ns1 = client1.GetStream();
                 BinaryFormatter binFor = new BinaryFormatter();
                 Point cursor = new Point(e.X, e.Y);
-                sendBack inf = new sendBack(cursor, false, true,false);
+                sendBack inf = new sendBack(cursor, false, true, false);
                 binFor.Serialize(ns1, inf);
             }
         }
