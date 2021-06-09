@@ -66,12 +66,9 @@ namespace screenSharing
             BinaryFormatter binFor = new BinaryFormatter();
             while (client.Connected)
             {
-
-
                 mainStream = client.GetStream();
-                byte[] imageBytes = new byte[200000];
-                mainStream.Read(imageBytes, 0, imageBytes.Length);
-                pictureBox1.Image = (Image)ByteToImage(imageBytes);
+                byte[] receive = (byte[])binFor.Deserialize(mainStream);
+                pictureBox1.Image = (Image)ByteToImage(receive);
             }
         }
 

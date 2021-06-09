@@ -64,8 +64,6 @@ namespace screenSharing
             BinaryFormatter binFor = new BinaryFormatter();
             ns = client.GetStream();
             Bitmap curr;
-            Image jpeg;
-            byte[] compressed;
             int prevHash = 0, currHash = 0;
             while (isClick)
             {
@@ -74,9 +72,7 @@ namespace screenSharing
                 currHash = curr.GetHashCode();
                 if (currHash != prevHash)
                 {
-
-                    ns.Write(GetCompressedBitmap(curr, 60L), 0, GetCompressedBitmap(curr, 60L).Length);
-                    /*binFor.Serialize(ns, GetCompressedBitmap(curr,60L));*/
+                    binFor.Serialize(ns, GetCompressedBitmap(curr, 60L));
                 }
                 prevHash = currHash;
             }
