@@ -126,6 +126,16 @@ namespace screenSharing
                     Click c = new Click();
                     c.holdClick(test);
                 }
+                if (inf.getWheelUp())
+                {
+                    Click c = new Click();
+                    c.wheelUp();
+                }
+                if (inf.getWheelDown())
+                {
+                    Click c = new Click();
+                    c.wheelDown();
+                }
             }
         }
         private void button1_Click(object sender, EventArgs e)

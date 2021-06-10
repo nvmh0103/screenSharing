@@ -31,6 +31,7 @@ namespace screenSharing
             client = new TcpClient();
             Listen = new Thread(startListening);
             getImage = new Thread(receiveImage);
+            this.pictureBox1.MouseWheel += pictureBox1_MouseWheel;
         }
         private void startListening()
         {
@@ -113,15 +114,29 @@ namespace screenSharing
                 Point cursor = new Point(e.X, e.Y);
                 if (e.Button == MouseButtons.Left)
                 {
-                    sendBack inf1 = new sendBack(cursor, false, false, false, true);
+                    sendBack inf1 = new sendBack(cursor, false, false, false, true,false,false);
                     binFor.Serialize(ns1, inf1);
                     return;
                 }
-                sendBack inf = new sendBack(cursor, false, false, false,false);
+                sendBack inf = new sendBack(cursor, false, false, false,false,false,false);
                 binFor.Serialize(ns1, inf);
             }
         }
-
+        private void pictureBox1_MouseWheel(object sender, MouseEventArgs e)
+        {
+            NetworkStream ns1 = client1.GetStream();
+            BinaryFormatter binFor = new BinaryFormatter();
+            Point cursor = new Point(e.X, e.Y);
+            if (e.Delta > 0)
+            {
+                sendBack inf = new sendBack(cursor, false, false, false, false, true, false);
+                binFor.Serialize(ns1, inf);
+            } else
+            {
+                sendBack inf = new sendBack(cursor, false, false, false, false, false, true);
+                binFor.Serialize(ns1, inf);
+            }
+        }
         private void pictureBox1_MouseClick(object sender, MouseEventArgs e)
         {
             if (client1.Connected)
@@ -131,12 +146,12 @@ namespace screenSharing
                 Point cursor = new Point(e.X, e.Y);
                 if (e.Button == MouseButtons.Left)
                 {
-                    sendBack inf = new sendBack(cursor, true, false, false,false);
+                    sendBack inf = new sendBack(cursor, true, false, false,false,false,false);
                     binFor.Serialize(ns1, inf);
                 }
                 else if (e.Button == MouseButtons.Right)
                 {
-                    sendBack inf1 = new sendBack(cursor, false, false, true,false);
+                    sendBack inf1 = new sendBack(cursor, false, false, true,false,false,false);
                     binFor.Serialize(ns1, inf1);
                 }
             }
@@ -149,7 +164,7 @@ namespace screenSharing
                 NetworkStream ns1 = client1.GetStream();
                 BinaryFormatter binFor = new BinaryFormatter();
                 Point cursor = new Point(e.X, e.Y);
-                sendBack inf = new sendBack(cursor, false, true, false,false);
+                sendBack inf = new sendBack(cursor, false, true, false,false,false,false);
                 binFor.Serialize(ns1, inf);
             }
         }
@@ -157,6 +172,11 @@ namespace screenSharing
         private void pictureBox1_MouseDown(object sender, MouseEventArgs e)
         {
             
+        }
+
+        private void pictureBox1_MouseHover(object sender, EventArgs e)
+        {
+            pictureBox1.Focus();
         }
     }
 }

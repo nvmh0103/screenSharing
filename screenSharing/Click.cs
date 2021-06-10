@@ -52,5 +52,13 @@ namespace screenSharing
             Cursor.Position = p;
             mouse_event((int)(mouseEventFlags.LEFTDOWN), 0, 0, 0, 0);
         }
+        public void wheelUp()
+        {
+            mouse_event((int)(mouseEventFlags.MOUSEWHEEL),0,0,120,0);
+        }
+        public void wheelDown()
+        {
+            mouse_event((int)(mouseEventFlags.MOUSEWHEEL), 0, 0, -120, 0);
+        }
     }
 }
