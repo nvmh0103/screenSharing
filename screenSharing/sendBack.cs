@@ -14,16 +14,18 @@ namespace screenSharing
         private bool isLeftClicked;
         private bool isDoubleClicked;
         private bool isRightClicked;
+        private bool isHoldClicked;
         sendBack()
         {
 
         }
-        public sendBack(Point mouse, bool isClicked,bool isDoubleClicked,bool isRightClicked)
+        public sendBack(Point mouse, bool isClicked,bool isDoubleClicked,bool isRightClicked,bool isHoldClicked)
         {
             this.mouse = mouse;
             this.isLeftClicked = isClicked;
             this.isDoubleClicked = isDoubleClicked;
             this.isRightClicked = isRightClicked;
+            this.isHoldClicked = isHoldClicked;
         }
         public Point getMouse()
         {
@@ -40,6 +42,10 @@ namespace screenSharing
         public bool getRightClick()
         {
             return this.isRightClicked;
+        }
+        public bool getHoldClick()
+        {
+            return this.isHoldClicked;
         }
     }
 }

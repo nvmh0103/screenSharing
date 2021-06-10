@@ -23,7 +23,8 @@ namespace screenSharing
             MOVE = 0x00000001,
             ABSOLUTE = 0x00000002,
             RIGHTDOWN = 0x00000008,
-            RIGHTUP = 0x00000010,
+            RIGHTUP =  0x00000010,
+            MOUSEWHEEL=0x00000800
             
         }
         public void leftClick(Point p)
@@ -45,6 +46,11 @@ namespace screenSharing
             mouse_event((int)(mouseEventFlags.LEFTUP), 0, 0, 0, 0);
             mouse_event((int)(mouseEventFlags.LEFTDOWN), 0, 0, 0, 0);
             mouse_event((int)(mouseEventFlags.LEFTUP), 0, 0, 0, 0);
+        }
+        public void holdClick(Point p)
+        {
+            Cursor.Position = p;
+            mouse_event((int)(mouseEventFlags.LEFTDOWN), 0, 0, 0, 0);
         }
     }
 }

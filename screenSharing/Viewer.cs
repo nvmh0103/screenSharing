@@ -111,7 +111,7 @@ namespace screenSharing
                 NetworkStream ns1 = client1.GetStream();
                 BinaryFormatter binFor = new BinaryFormatter();
                 Point cursor = new Point(e.X, e.Y);
-                sendBack inf = new sendBack(cursor, false, false, false);
+                sendBack inf = new sendBack(cursor, false, false, false,false);
                 binFor.Serialize(ns1, inf);
             }
         }
@@ -125,12 +125,12 @@ namespace screenSharing
                 Point cursor = new Point(e.X, e.Y);
                 if (e.Button == MouseButtons.Left)
                 {
-                    sendBack inf = new sendBack(cursor, true, false, false);
+                    sendBack inf = new sendBack(cursor, true, false, false,false);
                     binFor.Serialize(ns1, inf);
                 }
                 else if (e.Button == MouseButtons.Right)
                 {
-                    sendBack inf1 = new sendBack(cursor, false, false, true);
+                    sendBack inf1 = new sendBack(cursor, false, false, true,false);
                     binFor.Serialize(ns1, inf1);
                 }
             }
@@ -143,9 +143,21 @@ namespace screenSharing
                 NetworkStream ns1 = client1.GetStream();
                 BinaryFormatter binFor = new BinaryFormatter();
                 Point cursor = new Point(e.X, e.Y);
-                sendBack inf = new sendBack(cursor, false, true, false);
+                sendBack inf = new sendBack(cursor, false, true, false,false);
                 binFor.Serialize(ns1, inf);
             }
+        }
+
+        private void pictureBox1_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (client1.Connected)
+            {
+                NetworkStream ns1 = client1.GetStream();
+                BinaryFormatter binFor = new BinaryFormatter();
+                Point cursor = new Point(e.X, e.Y);
+                sendBack inf = new sendBack(cursor, false, false, false, true);
+                binFor.Serialize(ns1, inf);
+            }    
         }
     }
 }
