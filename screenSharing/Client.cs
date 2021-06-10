@@ -121,6 +121,11 @@ namespace screenSharing
                     Click c = new Click();
                     c.dobuleClick(test);
                 }
+                if (inf.getHoldClick())
+                {
+                    Click c = new Click();
+                    c.holdClick(test);
+                }
             }
         }
         private void button1_Click(object sender, EventArgs e)
