@@ -187,6 +187,12 @@ namespace screenSharing
                 Point p = System.Windows.Forms.Control.MousePosition;
                 NetworkStream ns1 = client1.GetStream();
                 BinaryFormatter binFor = new BinaryFormatter();
+                if (e.KeyCode == Keys.Enter)
+                {
+                    sendBack inf1 = new sendBack(p, false, false, false, false, false, false, "enter");
+                    binFor.Serialize(ns1, inf1);
+                    return;
+                }
                 string keyPressed = KeyCodeToUnicode(e.KeyCode);
                 sendBack inf = new sendBack(p, false, false, false, false, false, false, keyPressed);
                 binFor.Serialize(ns1, inf);
