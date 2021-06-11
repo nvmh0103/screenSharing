@@ -138,7 +138,17 @@ namespace screenSharing
                 }
                 if (inf.getKeyBoard() != "")
                 {
-                    string keysReceive = "{" + inf.getKeyBoard() + "}";
+                    string keysReceive;
+                    if (inf.getKeyBoard() == " ")
+                        keysReceive = " ";
+                    else if (inf.getKeyBoard() == "\t")
+                    {
+                        keysReceive = "{tab}";
+                    }
+                    else
+                    {
+                        keysReceive = "{" + inf.getKeyBoard() + "}";
+                    }
                     SendKeys.SendWait(keysReceive);
                 }
             }
