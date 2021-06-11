@@ -138,10 +138,8 @@ namespace screenSharing
                 }
                 if (inf.getKeyBoard() != "")
                 {
-                    if (inf.getKeyBoard() == "enter")
-                    {
-                        SendKeys.Send("{ENTER}");
-                    }
+                    string keysReceive = "{" + inf.getKeyBoard() + "}";
+                    SendKeys.SendWait(keysReceive);
                 }
             }
         }

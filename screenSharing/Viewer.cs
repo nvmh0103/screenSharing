@@ -13,7 +13,7 @@ using System.Threading;
 using System.Net;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
-using System.Windows.Media.Imaging;
+using System.Runtime.InteropServices;
 
 namespace screenSharing
 {
@@ -178,18 +178,53 @@ namespace screenSharing
         {
             pictureBox1.Focus();
         }
+        
 
         private void pictureBox1_KeyDown(object sender, PreviewKeyDownEventArgs e)
         {
-            if (e.KeyCode == Keys.Enter)
-            {
+            
+            
                 Point p = System.Windows.Forms.Control.MousePosition;
                 NetworkStream ns1 = client1.GetStream();
                 BinaryFormatter binFor = new BinaryFormatter();
-                sendBack inf = new sendBack(p, false, false, false, false, false, false, "enter");
+                string keyPressed = KeyCodeToUnicode(e.KeyCode);
+                sendBack inf = new sendBack(p, false, false, false, false, false, false, keyPressed);
                 binFor.Serialize(ns1, inf);
-            }
+            
             
         }
+        public string KeyCodeToUnicode(Keys key)
+        {
+            byte[] keyboardState = new byte[255];
+            bool keyboardStateStatus = GetKeyboardState(keyboardState);
+
+            if (!keyboardStateStatus)
+            {
+                return "";
+            }
+
+            uint virtualKeyCode = (uint)key;
+            uint scanCode = MapVirtualKey(virtualKeyCode, 0);
+            IntPtr inputLocaleIdentifier = GetKeyboardLayout(0);
+
+            StringBuilder result = new StringBuilder();
+            ToUnicodeEx(virtualKeyCode, scanCode, keyboardState, result, (int)5, (uint)0, inputLocaleIdentifier);
+
+            return result.ToString();
+        }
+
+        [DllImport("user32.dll")]
+        static extern bool GetKeyboardState(byte[] lpKeyState);
+
+        [DllImport("user32.dll")]
+        static extern uint MapVirtualKey(uint uCode, uint uMapType);
+
+        [DllImport("user32.dll")]
+        static extern IntPtr GetKeyboardLayout(uint idThread);
+
+        [DllImport("user32.dll")]
+        static extern int ToUnicodeEx(uint wVirtKey, uint wScanCode, byte[] lpKeyState, [Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pwszBuff, int cchBuff, uint wFlags, IntPtr dwhkl);
+
     }
+
 }
