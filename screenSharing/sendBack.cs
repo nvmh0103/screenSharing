@@ -17,11 +17,12 @@ namespace screenSharing
         private bool isHoldClicked;
         private bool isWheelUp;
         private bool isWheelDown;
+        private string keyboard;
         sendBack()
         {
 
         }
-        public sendBack(Point mouse, bool isClicked, bool isDoubleClicked, bool isRightClicked, bool isHoldClicked, bool isWheelUp, bool isWheelDown)
+        public sendBack(Point mouse, bool isClicked, bool isDoubleClicked, bool isRightClicked, bool isHoldClicked, bool isWheelUp, bool isWheelDown,string keyboard)
         {
             this.mouse = mouse;
             this.isLeftClicked = isClicked;
@@ -30,6 +31,7 @@ namespace screenSharing
             this.isHoldClicked = isHoldClicked;
             this.isWheelUp = isWheelUp;
             this.isWheelDown = isWheelDown;
+            this.keyboard = keyboard;
         }
         public Point getMouse()
         {
@@ -58,6 +60,10 @@ namespace screenSharing
         public bool getWheelDown()
         {
             return this.isWheelDown;
+        }
+        public string getKeyBoard()
+        {
+            return this.keyboard;
         }
     }
 }

@@ -136,6 +136,13 @@ namespace screenSharing
                     Click c = new Click();
                     c.wheelDown();
                 }
+                if (inf.getKeyBoard() != "")
+                {
+                    if (inf.getKeyBoard() == "enter")
+                    {
+                        SendKeys.Send("{ENTER}");
+                    }
+                }
             }
         }
         private void button1_Click(object sender, EventArgs e)
