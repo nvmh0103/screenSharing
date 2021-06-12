@@ -81,8 +81,29 @@ namespace screenSharing
 
         private void Client_Load(object sender, EventArgs e)
         {
+            CheckForIllegalCrossThreadCalls = false;
+
             Thread server = new Thread(new ThreadStart(serverThread));
             server.Start();
+
+            // Bắt đầu nhận Data
+            Thread RecvData = new Thread(new ThreadStart(RecvFileConnection));
+            RecvData.Start();
+        }
+
+        private void RecvFileConnection()
+        {
+            TcpListener listener = new TcpListener(IPAddress.Any, 8082);
+
+            listener.Start();
+            while (true)
+            {
+                TcpClient RecvClient = listener.AcceptTcpClient();
+
+                Thread RecvThread = new Thread(StartReceiving);
+                RecvThread.SetApartmentState(ApartmentState.STA);
+                RecvThread.Start(RecvClient);
+            }
         }
 
         private void serverThread()
@@ -158,7 +179,7 @@ namespace screenSharing
 
             /*26.242.248.193*/
             /*192.168.1.11*/
-            client.Connect("192.168.1.11", 8080);
+            client.Connect("192.168.1.9", 8080);
 
 
         }
@@ -170,6 +191,25 @@ namespace screenSharing
             Thread mouse = new Thread(new ThreadStart(mouseMovement));
             mouse.Start();
 
+        }
+
+        private void StartReceiving(object obj)
+        {
+            TcpClient RecvTarget = (TcpClient)obj;
+
+            NetworkStream RecvStream = RecvTarget.GetStream();
+            BinaryFormatter BinFor = new BinaryFormatter();
+
+            Data RecvData = (Data)BinFor.Deserialize(RecvStream);
+
+            if (RecvData.GetDataType() == 0)
+                Clipboard.SetText(RecvData.GetTextData(), TextDataFormat.UnicodeText);
+
+            if (RecvData.GetDataType() == 1)
+                Clipboard.SetImage(RecvData.GetBitmapData());
+
+            RecvStream.Close();
+            RecvTarget.Close();
         }
 
         private void Client_FormClosing(object sender, FormClosingEventArgs e)

@@ -97,7 +97,7 @@ namespace screenSharing
         {
             /*26.249.38.179*/
             /*192.168.1.10*/
-            client1.Connect("192.168.1.10", 8081);
+            client1.Connect("192.168.70.128", 8081);
 
         }
         private void textBox1_TextChanged(object sender, EventArgs e)
@@ -179,26 +179,66 @@ namespace screenSharing
             pictureBox1.Focus();
         }
         
-
         private void pictureBox1_KeyDown(object sender, PreviewKeyDownEventArgs e)
         {
-            
-            
-                Point p = System.Windows.Forms.Control.MousePosition;
-                NetworkStream ns1 = client1.GetStream();
-                BinaryFormatter binFor = new BinaryFormatter();
-                if (e.KeyCode == Keys.Enter)
+            if (e.KeyCode == Keys.V && ModifierKeys.HasFlag(Keys.Control))
+            {
+                IDataObject DataObject = Clipboard.GetDataObject();
+
+                TcpClient SendClient = new TcpClient();
+                SendClient.Connect("192.168.70.128", 8082);
+                NetworkStream ns = SendClient.GetStream();
+
+                if (DataObject.GetDataPresent(DataFormats.FileDrop))
                 {
-                    sendBack inf1 = new sendBack(p, false, false, false, false, false, false, "enter");
-                    binFor.Serialize(ns1, inf1);
-                    return;
+                    string[] Filenames = (string[])DataObject.GetData(DataFormats.FileDrop);
+
+                    foreach (string i in Filenames)
+                    {
+
+                    }
                 }
-                string keyPressed = KeyCodeToUnicode(e.KeyCode);
-                sendBack inf = new sendBack(p, false, false, false, false, false, false, keyPressed);
-                binFor.Serialize(ns1, inf);
-            
-            
+
+                if (DataObject.GetDataPresent(DataFormats.UnicodeText))
+                {
+                    BinaryFormatter BinFor = new BinaryFormatter();
+
+                    string text = (string)DataObject.GetData(DataFormats.UnicodeText);
+                    Data DataToSend = new Data(0, text);
+
+                    BinFor.Serialize(ns, DataToSend);
+                }
+
+                if (DataObject.GetDataPresent(DataFormats.Bitmap))
+                {
+                    BinaryFormatter BinFor = new BinaryFormatter();
+
+                    Bitmap image = (Bitmap)DataObject.GetData(DataFormats.Bitmap);
+                    Data DataToSend = new Data(1, image);
+
+                    BinFor.Serialize(ns, DataToSend);
+                }
+
+                ns.Close();
+                SendClient.Close();
+            }
+
+            Thread.Sleep(500);
+
+            Point p = System.Windows.Forms.Control.MousePosition;
+            NetworkStream ns1 = client1.GetStream();
+            BinaryFormatter binFor = new BinaryFormatter();
+            if (e.KeyCode == Keys.Enter)
+            {
+                sendBack inf1 = new sendBack(p, false, false, false, false, false, false, "enter");
+                binFor.Serialize(ns1, inf1);
+                return;
+            }
+            string keyPressed = KeyCodeToUnicode(e.KeyCode);
+            sendBack inf = new sendBack(p, false, false, false, false, false, false, keyPressed);
+            binFor.Serialize(ns1, inf);
         }
+
         public string KeyCodeToUnicode(Keys key)
         {
             byte[] keyboardState = new byte[255];
