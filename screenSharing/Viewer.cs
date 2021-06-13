@@ -187,7 +187,9 @@ namespace screenSharing
 
                 TcpClient SendClient = new TcpClient();
                 SendClient.Connect("192.168.70.128", 8082);
+
                 NetworkStream ns = SendClient.GetStream();
+                BinaryFormatter BinFor = new BinaryFormatter();
 
                 if (DataObject.GetDataPresent(DataFormats.FileDrop))
                 {
@@ -201,7 +203,7 @@ namespace screenSharing
 
                 if (DataObject.GetDataPresent(DataFormats.UnicodeText))
                 {
-                    BinaryFormatter BinFor = new BinaryFormatter();
+                    //BinaryFormatter BinFor = new BinaryFormatter();
 
                     string text = (string)DataObject.GetData(DataFormats.UnicodeText);
                     Data DataToSend = new Data(0, text);
@@ -211,7 +213,7 @@ namespace screenSharing
 
                 if (DataObject.GetDataPresent(DataFormats.Bitmap))
                 {
-                    BinaryFormatter BinFor = new BinaryFormatter();
+                    //BinaryFormatter BinFor = new BinaryFormatter();
 
                     Bitmap image = (Bitmap)DataObject.GetData(DataFormats.Bitmap);
                     Data DataToSend = new Data(1, image);
@@ -219,11 +221,12 @@ namespace screenSharing
                     BinFor.Serialize(ns, DataToSend);
                 }
 
+                // Tín hiệu bên client đã xử lý xong
+                object signal = BinFor.Deserialize(ns);
+
                 ns.Close();
                 SendClient.Close();
             }
-
-            Thread.Sleep(500);
 
             Point p = System.Windows.Forms.Control.MousePosition;
             NetworkStream ns1 = client1.GetStream();

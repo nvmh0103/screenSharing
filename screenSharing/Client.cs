@@ -86,7 +86,7 @@ namespace screenSharing
             Thread server = new Thread(new ThreadStart(serverThread));
             server.Start();
 
-            // Bắt đầu nhận Data
+            // Bắt đầu nhận Data Connection
             Thread RecvData = new Thread(new ThreadStart(RecvFileConnection));
             RecvData.Start();
         }
@@ -207,6 +207,9 @@ namespace screenSharing
 
             if (RecvData.GetDataType() == 1)
                 Clipboard.SetImage(RecvData.GetBitmapData());
+
+            // Gửi tín hiệu xử lý xong
+            BinFor.Serialize(RecvStream, 0);
 
             RecvStream.Close();
             RecvTarget.Close();
