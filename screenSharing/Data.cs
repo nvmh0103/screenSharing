@@ -11,28 +11,18 @@ namespace screenSharing
     class Data
     {
         int DataType;
-        string TextData;
-        Bitmap BitmapData;
-        string Filename;
-        byte[] FileData;
+        object ObjectData;
 
         public Data(int type, string text)
         {
             DataType = type;
-            TextData = text;
+            ObjectData = text;
         }
 
         public Data(int type, Bitmap bitmap)
         {
             DataType = type;
-            BitmapData = bitmap;
-        }
-
-        public Data(int type, byte[] data, string name)
-        {
-            DataType = type;
-            FileData = data;
-            Filename = name;
+            ObjectData = bitmap;
         }
 
         public int GetDataType()
@@ -40,24 +30,9 @@ namespace screenSharing
             return DataType;
         }
 
-        public string GetTextData()
+        public object GetData()
         {
-            return TextData;
-        }
-
-        public Bitmap GetBitmapData()
-        {
-            return BitmapData;
-        }
-
-        public byte[] GetFileData()
-        {
-            return FileData;
-        }
-
-        public string GetFilename()
-        {
-            return Filename;
+            return ObjectData;
         }
     }
 }

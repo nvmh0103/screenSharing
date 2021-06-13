@@ -100,7 +100,7 @@ namespace screenSharing
             {
                 TcpClient RecvClient = listener.AcceptTcpClient();
 
-                Thread RecvThread = new Thread(StartReceiving);
+                Thread RecvThread = new Thread(StartTransfering);
                 RecvThread.SetApartmentState(ApartmentState.STA);
                 RecvThread.Start(RecvClient);
             }
@@ -193,26 +193,57 @@ namespace screenSharing
 
         }
 
-        private void StartReceiving(object obj)
+        private void StartTransfering(object obj)
         {
-            TcpClient RecvTarget = (TcpClient)obj;
+            TcpClient TransferConnection = (TcpClient)obj;
 
-            NetworkStream RecvStream = RecvTarget.GetStream();
+            NetworkStream TransferStream = TransferConnection.GetStream();
             BinaryFormatter BinFor = new BinaryFormatter();
 
-            Data RecvData = (Data)BinFor.Deserialize(RecvStream);
+            Data RecvData = (Data)BinFor.Deserialize(TransferStream);
 
             if (RecvData.GetDataType() == 0)
-                Clipboard.SetText(RecvData.GetTextData(), TextDataFormat.UnicodeText);
+            {
+                string ClipboardText = (string)(RecvData.GetData());
+                Clipboard.SetText(ClipboardText, TextDataFormat.UnicodeText);
+
+                // Gửi tín hiệu xử lý xong
+                BinFor.Serialize(TransferStream, 0);
+            }
 
             if (RecvData.GetDataType() == 1)
-                Clipboard.SetImage(RecvData.GetBitmapData());
+            {
+                Bitmap ClipboardImage = (Bitmap)(RecvData.GetData());
+                Clipboard.SetImage(ClipboardImage);
 
-            // Gửi tín hiệu xử lý xong
-            BinFor.Serialize(RecvStream, 0);
+                // Gửi tín hiệu xử lý xong
+                BinFor.Serialize(TransferStream, 0);
+            }
 
-            RecvStream.Close();
-            RecvTarget.Close();
+            //Tín hiệu truyền dữ liệu từ client sang server
+            if (RecvData.GetDataType() == 3)
+            {
+                IDataObject DataObject = Clipboard.GetDataObject();
+
+                if (DataObject.GetDataPresent(DataFormats.UnicodeText))
+                {
+                    string text = (string)DataObject.GetData(DataFormats.UnicodeText);
+                    Data SendData = new Data(0, text);
+
+                    BinFor.Serialize(TransferStream, SendData);
+                }
+
+                if (DataObject.GetDataPresent(DataFormats.Bitmap))
+                {
+                    Bitmap image = (Bitmap)DataObject.GetData(DataFormats.Bitmap);
+                    Data SendData = new Data(1, image);
+
+                    BinFor.Serialize(TransferStream, SendData);
+                }
+            }
+
+            TransferStream.Close();
+            TransferConnection.Close();
         }
 
         private void Client_FormClosing(object sender, FormClosingEventArgs e)

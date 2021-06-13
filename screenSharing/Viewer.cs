@@ -185,61 +185,70 @@ namespace screenSharing
             {
                 IDataObject DataObject = Clipboard.GetDataObject();
 
-                TcpClient SendClient = new TcpClient();
-                SendClient.Connect("192.168.70.128", 8082);
+                TcpClient TransferConnection = new TcpClient();
+                TransferConnection.Connect("192.168.70.128", 8082);
 
-                NetworkStream ns = SendClient.GetStream();
+                NetworkStream TransferStream = TransferConnection.GetStream();
                 BinaryFormatter BinFor = new BinaryFormatter();
-
-                if (DataObject.GetDataPresent(DataFormats.FileDrop))
-                {
-                    string[] Filenames = (string[])DataObject.GetData(DataFormats.FileDrop);
-
-                    foreach (string i in Filenames)
-                    {
-
-                    }
-                }
 
                 if (DataObject.GetDataPresent(DataFormats.UnicodeText))
                 {
-                    //BinaryFormatter BinFor = new BinaryFormatter();
-
                     string text = (string)DataObject.GetData(DataFormats.UnicodeText);
-                    Data DataToSend = new Data(0, text);
+                    Data SendData = new Data(0, text);
 
-                    BinFor.Serialize(ns, DataToSend);
+                    BinFor.Serialize(TransferStream, SendData);
                 }
 
                 if (DataObject.GetDataPresent(DataFormats.Bitmap))
                 {
-                    //BinaryFormatter BinFor = new BinaryFormatter();
-
                     Bitmap image = (Bitmap)DataObject.GetData(DataFormats.Bitmap);
-                    Data DataToSend = new Data(1, image);
+                    Data SendData = new Data(1, image);
 
-                    BinFor.Serialize(ns, DataToSend);
+                    BinFor.Serialize(TransferStream, SendData);
                 }
 
                 // Tín hiệu bên client đã xử lý xong
-                object signal = BinFor.Deserialize(ns);
+                object signal = BinFor.Deserialize(TransferStream);
 
-                ns.Close();
-                SendClient.Close();
+                TransferStream.Close();
+                TransferConnection.Close();
+
+                SendKeys(e);
             }
 
-            Point p = System.Windows.Forms.Control.MousePosition;
-            NetworkStream ns1 = client1.GetStream();
-            BinaryFormatter binFor = new BinaryFormatter();
-            if (e.KeyCode == Keys.Enter)
+            // Lấy dữ liệu từ client
+            else if ((e.KeyCode == Keys.C || e.KeyCode == Keys.X) && ModifierKeys.HasFlag(Keys.Control))
             {
-                sendBack inf1 = new sendBack(p, false, false, false, false, false, false, "enter");
-                binFor.Serialize(ns1, inf1);
-                return;
+                SendKeys(e);
+                
+                TcpClient TransferConnection = new TcpClient();
+                TransferConnection.Connect("192.168.70.128", 8082);
+
+                NetworkStream TransferStream = TransferConnection.GetStream();
+                BinaryFormatter BinFor = new BinaryFormatter();
+
+                Data signal = new Data(3, string.Empty);
+                BinFor.Serialize(TransferStream, signal);
+
+                Data RecvData = (Data)BinFor.Deserialize(TransferStream);
+
+                if (RecvData.GetDataType() == 0)
+                {
+                    string ClipboardText = (string)RecvData.GetData();
+                    Clipboard.SetText(ClipboardText, TextDataFormat.UnicodeText);
+                }
+
+                if (RecvData.GetDataType() == 1)
+                {
+                    Bitmap ClipboardImage = (Bitmap)RecvData.GetData();
+                    Clipboard.SetImage(ClipboardImage);
+                }
+
+                TransferStream.Close();
+                TransferConnection.Close();
             }
-            string keyPressed = KeyCodeToUnicode(e.KeyCode);
-            sendBack inf = new sendBack(p, false, false, false, false, false, false, keyPressed);
-            binFor.Serialize(ns1, inf);
+            else
+                SendKeys(e);
         }
 
         public string KeyCodeToUnicode(Keys key)
@@ -260,6 +269,22 @@ namespace screenSharing
             ToUnicodeEx(virtualKeyCode, scanCode, keyboardState, result, (int)5, (uint)0, inputLocaleIdentifier);
 
             return result.ToString();
+        }
+
+        void SendKeys(PreviewKeyDownEventArgs e)
+        {
+            Point p = System.Windows.Forms.Control.MousePosition;
+            NetworkStream ns1 = client1.GetStream();
+            BinaryFormatter binFor = new BinaryFormatter();
+            if (e.KeyCode == Keys.Enter)
+            {
+                sendBack inf1 = new sendBack(p, false, false, false, false, false, false, "enter");
+                binFor.Serialize(ns1, inf1);
+                return;
+            }
+            string keyPressed = KeyCodeToUnicode(e.KeyCode);
+            sendBack inf = new sendBack(p, false, false, false, false, false, false, keyPressed);
+            binFor.Serialize(ns1, inf);
         }
 
         [DllImport("user32.dll")]
