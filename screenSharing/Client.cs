@@ -225,8 +225,9 @@ namespace screenSharing
 
             if (RecvData.GetDataType() == 2)
             {
+                /* Lưu file vào temp folder trước, rồi thực hiện cut */
                 string filename = (string)RecvData.GetData();
-                string tmpDir = AppDomain.CurrentDomain.BaseDirectory + "\\temp\\";
+                string tmpDir = Path.GetTempPath();
 
                 filenames.Add(tmpDir + filename);
 
