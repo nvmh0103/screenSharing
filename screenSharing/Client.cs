@@ -13,6 +13,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using System.Net;
 using System.IO;
+using System.Collections.Specialized;
 
 namespace screenSharing
 {
@@ -22,6 +23,8 @@ namespace screenSharing
         private TcpClient client1 = new TcpClient();
         private NetworkStream ns;
         bool isClick = true;
+
+        private StringCollection filenames = new StringCollection();
         public Client()
         {
             InitializeComponent();
@@ -220,8 +223,44 @@ namespace screenSharing
                 BinFor.Serialize(TransferStream, 0);
             }
 
-            //Tín hiệu truyền dữ liệu từ client sang server
+            if (RecvData.GetDataType() == 2)
+            {
+                string filename = (string)RecvData.GetData();
+                string tmpDir = AppDomain.CurrentDomain.BaseDirectory + "\\temp\\";
+
+                filenames.Add(tmpDir + filename);
+
+                using (var output = File.Create(tmpDir + filename))
+                {
+                    var buffer = new byte[1024];
+                    int bytesRead;
+                    while ((bytesRead = TransferStream.Read(buffer, 0, buffer.Length)) > 0)
+                    {
+                        output.Write(buffer, 0, bytesRead);
+                    }
+                }
+            }
+
             if (RecvData.GetDataType() == 3)
+            {
+                /* Set clipboard operation = cut */
+                /*----------------------------------------------------------------------*/
+                byte[] moveEffect = { 2, 0, 0, 0 };
+
+                MemoryStream dropEffect = new MemoryStream();
+                dropEffect.Write(moveEffect, 0, moveEffect.Length);
+
+                DataObject data = new DataObject("Preferred DropEffect", dropEffect);
+                data.SetFileDropList(filenames);
+                /*----------------------------------------------------------------------*/
+
+                Clipboard.SetDataObject(data, true);
+
+                BinFor.Serialize(TransferStream, 0);
+            }
+
+            //Tín hiệu truyền dữ liệu từ client sang server
+            if (RecvData.GetDataType() == 4)
             {
                 IDataObject DataObject = Clipboard.GetDataObject();
 

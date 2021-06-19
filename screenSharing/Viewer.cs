@@ -25,6 +25,7 @@ namespace screenSharing
 
         private Thread Listen;
         private Thread getImage;
+
         public Viewer()
         {
             InitializeComponent();
@@ -183,37 +184,99 @@ namespace screenSharing
         {
             if (e.KeyCode == Keys.V && ModifierKeys.HasFlag(Keys.Control))
             {
+                bool FileTransfer = false;
                 IDataObject DataObject = Clipboard.GetDataObject();
-
-                TcpClient TransferConnection = new TcpClient();
-                TransferConnection.Connect("192.168.70.128", 8082);
-
-                NetworkStream TransferStream = TransferConnection.GetStream();
-                BinaryFormatter BinFor = new BinaryFormatter();
 
                 if (DataObject.GetDataPresent(DataFormats.UnicodeText))
                 {
+                    TcpClient TransferConnection = new TcpClient();
+                    TransferConnection.Connect("192.168.70.128", 8082);
+
+                    NetworkStream TransferStream = TransferConnection.GetStream();
+                    BinaryFormatter BinFor = new BinaryFormatter();
+
                     string text = (string)DataObject.GetData(DataFormats.UnicodeText);
                     Data SendData = new Data(0, text);
 
                     BinFor.Serialize(TransferStream, SendData);
+
+                    // Tín hiệu bên client đã xử lý xong
+                    object signal = BinFor.Deserialize(TransferStream);
+
+                    TransferStream.Close();
+                    TransferConnection.Close();
                 }
 
                 if (DataObject.GetDataPresent(DataFormats.Bitmap))
                 {
+                    TcpClient TransferConnection = new TcpClient();
+                    TransferConnection.Connect("192.168.70.128", 8082);
+
+                    NetworkStream TransferStream = TransferConnection.GetStream();
+                    BinaryFormatter BinFor = new BinaryFormatter();
+
                     Bitmap image = (Bitmap)DataObject.GetData(DataFormats.Bitmap);
                     Data SendData = new Data(1, image);
 
                     BinFor.Serialize(TransferStream, SendData);
+
+                    // Tín hiệu bên client đã xử lý xong
+                    object signal = BinFor.Deserialize(TransferStream);
+
+                    TransferStream.Close();
+                    TransferConnection.Close();
                 }
 
-                // Tín hiệu bên client đã xử lý xong
-                object signal = BinFor.Deserialize(TransferStream);
+                if (DataObject.GetDataPresent(DataFormats.FileDrop))
+                {
+                    string[] paths = (string[])DataObject.GetData(DataFormats.FileDrop);
+                    int NumOfFiles = paths.Length;
 
-                TransferStream.Close();
-                TransferConnection.Close();
+                    string[] filenames = new string[NumOfFiles];
 
-                SendKeys(e);
+                    for (int i = 0; i < filenames.Length; i++)
+                        filenames[i] = Path.GetFileName(paths[i]);
+
+                    for (int i = 0; i < NumOfFiles; i++)
+                    {
+                        Data FileHeader = new Data(2, filenames[i]);
+
+                        TcpClient client = new TcpClient();
+                        client.Connect("192.168.70.128", 8082);
+
+                        NetworkStream ns = client.GetStream();
+                        BinaryFormatter BinFor = new BinaryFormatter();
+
+                        BinFor.Serialize(ns, FileHeader);
+
+                        client.Client.SendFile(paths[i]);
+
+                        ns.Close();
+                        client.Close();
+                    }
+
+                    FileTransfer = true;
+                }
+
+                if (FileTransfer == true)
+                {
+                    TcpClient SignalClient = new TcpClient();
+                    SignalClient.Connect("192.168.70.128", 8082);
+                    NetworkStream SignalStream = SignalClient.GetStream();
+                    BinaryFormatter bf = new BinaryFormatter();
+
+                    Data signal = new Data(3, string.Empty);
+
+                    bf.Serialize(SignalStream, signal);
+
+                    bf.Deserialize(SignalStream);
+
+                    SendKeys(e);
+                }
+
+                else
+                    SendKeys(e);
+
             }
 
             // Lấy dữ liệu từ client
@@ -227,7 +290,7 @@ namespace screenSharing
                 NetworkStream TransferStream = TransferConnection.GetStream();
                 BinaryFormatter BinFor = new BinaryFormatter();
 
-                Data signal = new Data(3, string.Empty);
+                Data signal = new Data(4, string.Empty);
                 BinFor.Serialize(TransferStream, signal);
 
                 Data RecvData = (Data)BinFor.Deserialize(TransferStream);

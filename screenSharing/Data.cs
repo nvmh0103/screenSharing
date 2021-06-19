@@ -13,6 +13,7 @@ namespace screenSharing
         int DataType;
         object ObjectData;
 
+
         public Data(int type, string text)
         {
             DataType = type;
@@ -24,7 +25,7 @@ namespace screenSharing
             DataType = type;
             ObjectData = bitmap;
         }
-
+        
         public int GetDataType()
         {
             return DataType;
