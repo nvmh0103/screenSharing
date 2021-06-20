@@ -11,8 +11,8 @@ namespace screenSharing
     class Data
     {
         int DataType;
+        int TransferStatus;
         object ObjectData;
-
 
         public Data(int type, string text)
         {
@@ -25,6 +25,13 @@ namespace screenSharing
             DataType = type;
             ObjectData = bitmap;
         }
+
+        public Data(int type, int status, string filename)
+        {
+            DataType = type;
+            TransferStatus = status;
+            ObjectData = filename;
+        }
         
         public int GetDataType()
         {
@@ -34,6 +41,11 @@ namespace screenSharing
         public object GetData()
         {
             return ObjectData;
+        }
+
+        public int GetStatus()
+        {
+            return TransferStatus;
         }
     }
 }

@@ -212,6 +212,9 @@ namespace screenSharing
 
                 // Gửi tín hiệu xử lý xong
                 BinFor.Serialize(TransferStream, 0);
+
+                TransferStream.Close();
+                TransferConnection.Close();
             }
 
             if (RecvData.GetDataType() == 1)
@@ -221,6 +224,9 @@ namespace screenSharing
 
                 // Gửi tín hiệu xử lý xong
                 BinFor.Serialize(TransferStream, 0);
+
+                TransferStream.Close();
+                TransferConnection.Close();
             }
 
             if (RecvData.GetDataType() == 2)
@@ -256,11 +262,15 @@ namespace screenSharing
                 /*----------------------------------------------------------------------*/
 
                 Clipboard.SetDataObject(data, true);
+                filenames.Clear();
 
                 BinFor.Serialize(TransferStream, 0);
+
+                TransferStream.Close();
+                TransferConnection.Close();
             }
 
-            //Tín hiệu truyền dữ liệu từ client sang server
+            // Truyền dữ liệu từ client sang server
             if (RecvData.GetDataType() == 4)
             {
                 IDataObject DataObject = Clipboard.GetDataObject();
@@ -271,6 +281,9 @@ namespace screenSharing
                     Data SendData = new Data(0, text);
 
                     BinFor.Serialize(TransferStream, SendData);
+
+                    TransferStream.Close();
+                    TransferConnection.Close();
                 }
 
                 if (DataObject.GetDataPresent(DataFormats.Bitmap))
@@ -279,11 +292,35 @@ namespace screenSharing
                     Data SendData = new Data(1, image);
 
                     BinFor.Serialize(TransferStream, SendData);
+
+                    TransferStream.Close();
+                    TransferConnection.Close();
+                }
+
+                if (DataObject.GetDataPresent(DataFormats.FileDrop))
+                {
+                    Data FileHeader = null;
+
+                    if (filenames.Count == 0)
+                        filenames = Clipboard.GetFileDropList();
+
+                    string filename = Path.GetFileName(filenames[0]);
+
+                    if (filenames.Count > 1)
+                        FileHeader = new Data(2, 1, filename);
+                    else
+                        FileHeader = new Data(2, 0, filename);
+                    
+                    BinFor.Serialize(TransferStream, FileHeader);
+
+                    TransferConnection.Client.SendFile(filenames[0]);
+
+                    TransferStream.Close();
+                    TransferConnection.Close();
+
+                    filenames.RemoveAt(0);
                 }
             }
-
-            TransferStream.Close();
-            TransferConnection.Close();
         }
 
         private void Client_FormClosing(object sender, FormClosingEventArgs e)
@@ -299,4 +336,3 @@ namespace screenSharing
         }
     }
 }
-

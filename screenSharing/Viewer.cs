@@ -14,6 +14,7 @@ using System.Net;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Collections.Specialized;
 
 namespace screenSharing
 {
@@ -25,6 +26,8 @@ namespace screenSharing
 
         private Thread Listen;
         private Thread getImage;
+
+        private StringCollection filenames = new StringCollection();
 
         public Viewer()
         {
@@ -180,6 +183,7 @@ namespace screenSharing
             pictureBox1.Focus();
         }
         
+        // Gửi input
         private void pictureBox1_KeyDown(object sender, PreviewKeyDownEventArgs e)
         {
             if (e.KeyCode == Keys.V && ModifierKeys.HasFlag(Keys.Control))
@@ -232,14 +236,14 @@ namespace screenSharing
                     string[] paths = (string[])DataObject.GetData(DataFormats.FileDrop);
                     int NumOfFiles = paths.Length;
 
-                    string[] filenames = new string[NumOfFiles];
+                    string[] files = new string[NumOfFiles];
 
-                    for (int i = 0; i < filenames.Length; i++)
-                        filenames[i] = Path.GetFileName(paths[i]);
+                    for (int i = 0; i < files.Length; i++)
+                        files[i] = Path.GetFileName(paths[i]);
 
                     for (int i = 0; i < NumOfFiles; i++)
                     {
-                        Data FileHeader = new Data(2, filenames[i]);
+                        Data FileHeader = new Data(2, files[i]);
 
                         TcpClient client = new TcpClient();
                         client.Connect("192.168.70.128", 8082);
@@ -272,6 +276,8 @@ namespace screenSharing
                     bf.Deserialize(SignalStream);
 
                     SendKeys(e);
+
+                    MessageBox.Show("Files successfully transferred.");
                 }
 
                 else
@@ -291,6 +297,7 @@ namespace screenSharing
                 BinaryFormatter BinFor = new BinaryFormatter();
 
                 Data signal = new Data(4, string.Empty);
+
                 BinFor.Serialize(TransferStream, signal);
 
                 Data RecvData = (Data)BinFor.Deserialize(TransferStream);
@@ -299,16 +306,92 @@ namespace screenSharing
                 {
                     string ClipboardText = (string)RecvData.GetData();
                     Clipboard.SetText(ClipboardText, TextDataFormat.UnicodeText);
+
+                    TransferStream.Close();
+                    TransferConnection.Close();
                 }
 
                 if (RecvData.GetDataType() == 1)
                 {
                     Bitmap ClipboardImage = (Bitmap)RecvData.GetData();
                     Clipboard.SetImage(ClipboardImage);
+
+                    TransferStream.Close();
+                    TransferConnection.Close();
                 }
 
-                TransferStream.Close();
-                TransferConnection.Close();
+                if (RecvData.GetDataType() == 2)
+                {
+                    string filename = (string)RecvData.GetData();
+                    string tmpDir = Path.GetTempPath();
+                    int status = RecvData.GetStatus();
+
+                    filenames.Add(tmpDir + filename);
+
+                    using (var output = File.Create(tmpDir + filename))
+                    {
+                        var buffer = new byte[1024];
+                        int bytesRead;
+                        while ((bytesRead = TransferStream.Read(buffer, 0, buffer.Length)) > 0)
+                        {
+                            output.Write(buffer, 0, bytesRead);
+                        }
+                    }
+
+                    TransferStream.Close();
+                    TransferConnection.Close();
+
+                    do
+                    {
+                        TcpClient client = new TcpClient();
+                        client.Connect("192.168.70.128", 8082);
+
+                        NetworkStream ns = client.GetStream();
+                        BinaryFormatter bf = new BinaryFormatter();
+
+                        Data NextData = new Data(4, string.Empty);
+
+                        bf.Serialize(ns, NextData);
+
+                        NextData = (Data)bf.Deserialize(ns);
+
+                        filename = (string)NextData.GetData();
+                        tmpDir = Path.GetTempPath();
+                        status = NextData.GetStatus();
+
+                        filenames.Add(tmpDir + filename);
+
+                        using (var output = File.Create(tmpDir + filename))
+                        {
+                            var buffer = new byte[1024];
+                            int bytesRead;
+                            while ((bytesRead = ns.Read(buffer, 0, buffer.Length)) > 0)
+                            {
+                                output.Write(buffer, 0, bytesRead);
+                            }
+                        }
+
+                        ns.Close();
+                        client.Close();
+                    }
+                    while (status != 0);
+
+                    /* Set clipboard cut operation */
+                    /*-----------------------------------------------------------------------*/
+                    byte[] moveEffect = { 2, 0, 0, 0 };
+                    MemoryStream dropEffect = new MemoryStream();
+                    dropEffect.Write(moveEffect, 0, moveEffect.Length);
+
+                    DataObject data = new DataObject("Preferred DropEffect", dropEffect);
+                    data.SetFileDropList(filenames);
+                    /*-----------------------------------------------------------------------*/
+
+                    Clipboard.SetDataObject(data, true);
+
+                    MessageBox.Show("Files successfully copied.");
+
+                    filenames.Clear();
+                } 
             }
             else
                 SendKeys(e);
