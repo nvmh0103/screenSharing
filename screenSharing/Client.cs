@@ -29,7 +29,7 @@ namespace screenSharing
         {
             InitializeComponent();
         }
-
+        // Capture current screen and save as bitmap
         private static Bitmap screenCapture()
         {
             Rectangle bound = Screen.PrimaryScreen.Bounds;
@@ -38,15 +38,7 @@ namespace screenSharing
             graphic.CopyFromScreen(bound.X, bound.Y, 0, 0, bound.Size, CopyPixelOperation.SourceCopy);
             return screenShot;
         }
-        private byte[] imageCompress(Image img)
-        {
-            using (var ms = new MemoryStream())
-            {
-                Bitmap bmp = new Bitmap(img);
-                bmp.Save(ms, System.Drawing.Imaging.ImageFormat.Bmp);
-                return ms.ToArray();
-            }
-        }
+        // Compress bitmap with jpeg encode for lossing to improve quaility
         private byte[] GetCompressedBitmap(Bitmap bmp, long quality)
         {
             using (var mss = new MemoryStream())
@@ -56,6 +48,7 @@ namespace screenSharing
                 EncoderParameters parameters = new EncoderParameters(1);
                 parameters.Param[0] = qualityParam;
                 bmp.Save(mss, imageCodec, parameters);
+                // return as an array
                 return mss.ToArray();
             }
         }
@@ -71,8 +64,9 @@ namespace screenSharing
             while (isClick)
             {
                 curr = screenCapture();
-
+                // get hashcode for current screenshot
                 currHash = curr.GetHashCode();
+                // if the screenshot is the same, we wont send it to improve speed
                 if (currHash != prevHash)
                 {
                     binFor.Serialize(ns, GetCompressedBitmap(curr, 60L));
@@ -125,30 +119,30 @@ namespace screenSharing
             while (true)
             {
                 sendBack inf = (sendBack)binFor.Deserialize(ns);
-                Point test = inf.getMouse();
-                textBox1.Text = "X: " + test.X + " Y: " + test.Y;
-                test.X = test.X * 1366 / 1856;
-                test.Y = test.Y * 768 / 1054;
-                Cursor.Position = test;
+                Point current = inf.getMouse();
+                // do calculate to make mouse move correctly.
+                current.X = current.X * 1366 / 1856;
+                current.Y = current.Y * 768 / 1054;
+                Cursor.Position = current;
                 if (inf.getLeftClick())
                 {
                     Click c = new Click();
-                    c.leftClick(test);
+                    c.leftClick(current);
                 }
                 if (inf.getRightClick())
                 {
                     Click c = new Click();
-                    c.rightClick(test);
+                    c.rightClick(current);
                 }
                 if (inf.getDoubleClick())
                 {
                     Click c = new Click();
-                    c.dobuleClick(test);
+                    c.dobuleClick(current);
                 }
                 if (inf.getHoldClick())
                 {
                     Click c = new Click();
-                    c.holdClick(test);
+                    c.holdClick(current);
                 }
                 if (inf.getWheelUp())
                 {

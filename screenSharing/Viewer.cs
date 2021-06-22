@@ -32,8 +32,11 @@ namespace screenSharing
         public Viewer()
         {
             InitializeComponent();
+            // Thread for client
             client = new TcpClient();
+            //Thread for server
             Listen = new Thread(startListening);
+            // Start sending image
             getImage = new Thread(receiveImage);
             this.pictureBox1.MouseWheel += pictureBox1_MouseWheel;
         }
@@ -72,13 +75,16 @@ namespace screenSharing
             while (client.Connected)
             {
                 mainStream = client.GetStream();
+                //Receive image
                 byte[] receive = (byte[])binFor.Deserialize(mainStream);
+                // call ByteToImage to convert array of byte into image
                 pictureBox1.Image = (Image)ByteToImage(receive);
             }
         }
 
         private void Viewer_Load(object sender, EventArgs e)
         {
+            // maximize windows
             this.WindowState = FormWindowState.Maximized;
             server = new TcpListener(IPAddress.Any, 8080);
             Listen.Start();
@@ -95,13 +101,14 @@ namespace screenSharing
 
         }
 
-
-        TcpClient client1 = new TcpClient();
+        // init a new connect 
+        TcpClient receiveMouseAndKeyboard = new TcpClient();
         private void connect()
         {
             /*26.249.38.179*/
             /*192.168.1.10*/
-            client1.Connect("192.168.70.128", 8081);
+            //use this connect to get mouse and keyboard control
+            receiveMouseAndKeyboard.Connect("192.168.70.128", 8081);
 
         }
         private void textBox1_TextChanged(object sender, EventArgs e)
@@ -109,67 +116,75 @@ namespace screenSharing
 
         }
 
+        // capture mouse movement
         private void pictureBox1_MouseMove(object sender, MouseEventArgs e)
         {
-            if (client1.Connected)
+            if (receiveMouseAndKeyboard.Connected)
             {
-                NetworkStream ns1 = client1.GetStream();
+                NetworkStream sendBackStream = receiveMouseAndKeyboard.GetStream();
                 BinaryFormatter binFor = new BinaryFormatter();
                 Point cursor = new Point(e.X, e.Y);
+                // trigger a drag and drop mouse event
                 if (e.Button == MouseButtons.Left)
                 {
                     sendBack inf1 = new sendBack(cursor, false, false, false, true,false,false,"");
-                    binFor.Serialize(ns1, inf1);
+                    binFor.Serialize(sendBackStream, inf1);
                     return;
                 }
+                // send mouse coordinate 
                 sendBack inf = new sendBack(cursor, false, false, false,false,false,false,"");
-                binFor.Serialize(ns1, inf);
+                binFor.Serialize(sendBackStream, inf);
             }
         }
+        //Trigger scroll event
         private void pictureBox1_MouseWheel(object sender, MouseEventArgs e)
         {
-            NetworkStream ns1 = client1.GetStream();
+            NetworkStream sendBackStream = receiveMouseAndKeyboard.GetStream();
             BinaryFormatter binFor = new BinaryFormatter();
             Point cursor = new Point(e.X, e.Y);
+            // scroll forward
             if (e.Delta > 0)
             {
                 sendBack inf = new sendBack(cursor, false, false, false, false, true, false,"");
-                binFor.Serialize(ns1, inf);
-            } else
+                binFor.Serialize(sendBackStream, inf);
+            } else //scroll backward
             {
                 sendBack inf = new sendBack(cursor, false, false, false, false, false, true,"");
-                binFor.Serialize(ns1, inf);
+                binFor.Serialize(sendBackStream, inf);
             }
         }
+        // Trigger mouse click
         private void pictureBox1_MouseClick(object sender, MouseEventArgs e)
         {
-            if (client1.Connected)
+            if (receiveMouseAndKeyboard.Connected)
             {
-                NetworkStream ns1 = client1.GetStream();
+                NetworkStream sendBackStream = receiveMouseAndKeyboard.GetStream();
                 BinaryFormatter binFor = new BinaryFormatter();
                 Point cursor = new Point(e.X, e.Y);
+                // Left click
                 if (e.Button == MouseButtons.Left)
                 {
                     sendBack inf = new sendBack(cursor, true, false, false,false,false,false,"");
-                    binFor.Serialize(ns1, inf);
+                    binFor.Serialize(sendBackStream, inf);
                 }
+                // right click
                 else if (e.Button == MouseButtons.Right)
                 {
                     sendBack inf1 = new sendBack(cursor, false, false, true,false,false,false,"");
-                    binFor.Serialize(ns1, inf1);
+                    binFor.Serialize(sendBackStream, inf1);
                 }
             }
         }
-
+        // Trigger mouse double click
         private void pictureBox1_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-            if (client1.Connected)
+            if (receiveMouseAndKeyboard.Connected)
             {
-                NetworkStream ns1 = client1.GetStream();
+                NetworkStream sendBackStream = receiveMouseAndKeyboard.GetStream();
                 BinaryFormatter binFor = new BinaryFormatter();
                 Point cursor = new Point(e.X, e.Y);
                 sendBack inf = new sendBack(cursor, false, true, false,false,false,false,"");
-                binFor.Serialize(ns1, inf);
+                binFor.Serialize(sendBackStream, inf);
             }
         }
 
@@ -420,17 +435,17 @@ namespace screenSharing
         void SendKeys(PreviewKeyDownEventArgs e)
         {
             Point p = System.Windows.Forms.Control.MousePosition;
-            NetworkStream ns1 = client1.GetStream();
+            NetworkStream sendBackStream = receiveMouseAndKeyboard.GetStream();
             BinaryFormatter binFor = new BinaryFormatter();
             if (e.KeyCode == Keys.Enter)
             {
                 sendBack inf1 = new sendBack(p, false, false, false, false, false, false, "enter");
-                binFor.Serialize(ns1, inf1);
+                binFor.Serialize(sendBackStream, inf1);
                 return;
             }
             string keyPressed = KeyCodeToUnicode(e.KeyCode);
             sendBack inf = new sendBack(p, false, false, false, false, false, false, keyPressed);
-            binFor.Serialize(ns1, inf);
+            binFor.Serialize(sendBackStream, inf);
         }
 
         [DllImport("user32.dll")]
