@@ -14,6 +14,7 @@ using System.Net;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Collections.Specialized;
 
 namespace screenSharing
 {
@@ -25,6 +26,9 @@ namespace screenSharing
 
         private Thread Listen;
         private Thread getImage;
+
+        private StringCollection filenames = new StringCollection();
+
         public Viewer()
         {
             InitializeComponent();
@@ -97,7 +101,7 @@ namespace screenSharing
         {
             /*26.249.38.179*/
             /*192.168.1.10*/
-            client1.Connect("192.168.1.10", 8081);
+            client1.Connect("192.168.70.128", 8081);
 
         }
         private void textBox1_TextChanged(object sender, EventArgs e)
@@ -179,26 +183,220 @@ namespace screenSharing
             pictureBox1.Focus();
         }
         
-
+        // Gửi input
         private void pictureBox1_KeyDown(object sender, PreviewKeyDownEventArgs e)
         {
-            
-            
-                Point p = System.Windows.Forms.Control.MousePosition;
-                NetworkStream ns1 = client1.GetStream();
-                BinaryFormatter binFor = new BinaryFormatter();
-                if (e.KeyCode == Keys.Enter)
+            if (e.KeyCode == Keys.V && ModifierKeys.HasFlag(Keys.Control))
+            {
+                bool FileTransfer = false;
+                IDataObject DataObject = Clipboard.GetDataObject();
+
+                if (DataObject.GetDataPresent(DataFormats.UnicodeText))
                 {
-                    sendBack inf1 = new sendBack(p, false, false, false, false, false, false, "enter");
-                    binFor.Serialize(ns1, inf1);
-                    return;
+                    TcpClient TransferConnection = new TcpClient();
+                    TransferConnection.Connect("192.168.70.128", 8082);
+
+                    NetworkStream TransferStream = TransferConnection.GetStream();
+                    BinaryFormatter BinFor = new BinaryFormatter();
+
+                    string text = (string)DataObject.GetData(DataFormats.UnicodeText);
+                    Data SendData = new Data(0, text);
+
+                    BinFor.Serialize(TransferStream, SendData);
+
+                    // Tín hiệu bên client đã xử lý xong
+                    object signal = BinFor.Deserialize(TransferStream);
+
+                    TransferStream.Close();
+                    TransferConnection.Close();
                 }
-                string keyPressed = KeyCodeToUnicode(e.KeyCode);
-                sendBack inf = new sendBack(p, false, false, false, false, false, false, keyPressed);
-                binFor.Serialize(ns1, inf);
-            
-            
+
+                if (DataObject.GetDataPresent(DataFormats.Bitmap))
+                {
+                    TcpClient TransferConnection = new TcpClient();
+                    TransferConnection.Connect("192.168.70.128", 8082);
+
+                    NetworkStream TransferStream = TransferConnection.GetStream();
+                    BinaryFormatter BinFor = new BinaryFormatter();
+
+                    Bitmap image = (Bitmap)DataObject.GetData(DataFormats.Bitmap);
+                    Data SendData = new Data(1, image);
+
+                    BinFor.Serialize(TransferStream, SendData);
+
+                    // Tín hiệu bên client đã xử lý xong
+                    object signal = BinFor.Deserialize(TransferStream);
+
+                    TransferStream.Close();
+                    TransferConnection.Close();
+                }
+
+                if (DataObject.GetDataPresent(DataFormats.FileDrop))
+                {
+                    string[] paths = (string[])DataObject.GetData(DataFormats.FileDrop);
+                    int NumOfFiles = paths.Length;
+
+                    string[] files = new string[NumOfFiles];
+
+                    for (int i = 0; i < files.Length; i++)
+                        files[i] = Path.GetFileName(paths[i]);
+
+                    for (int i = 0; i < NumOfFiles; i++)
+                    {
+                        Data FileHeader = new Data(2, files[i]);
+
+                        TcpClient client = new TcpClient();
+                        client.Connect("192.168.70.128", 8082);
+
+                        NetworkStream ns = client.GetStream();
+                        BinaryFormatter BinFor = new BinaryFormatter();
+
+                        BinFor.Serialize(ns, FileHeader);
+
+                        client.Client.SendFile(paths[i]);
+
+                        ns.Close();
+                        client.Close();
+                    }
+
+                    FileTransfer = true;
+                }
+
+                if (FileTransfer == true)
+                {
+                    TcpClient SignalClient = new TcpClient();
+                    SignalClient.Connect("192.168.70.128", 8082);
+                    NetworkStream SignalStream = SignalClient.GetStream();
+                    BinaryFormatter bf = new BinaryFormatter();
+
+                    Data signal = new Data(3, string.Empty);
+
+                    bf.Serialize(SignalStream, signal);
+
+                    bf.Deserialize(SignalStream);
+
+                    SendKeys(e);
+
+                    MessageBox.Show("Files successfully transferred.");
+                }
+
+                else
+                    SendKeys(e);
+
+            }
+
+            // Lấy dữ liệu từ client
+            else if ((e.KeyCode == Keys.C || e.KeyCode == Keys.X) && ModifierKeys.HasFlag(Keys.Control))
+            {
+                SendKeys(e);
+                
+                TcpClient TransferConnection = new TcpClient();
+                TransferConnection.Connect("192.168.70.128", 8082);
+
+                NetworkStream TransferStream = TransferConnection.GetStream();
+                BinaryFormatter BinFor = new BinaryFormatter();
+
+                Data signal = new Data(4, string.Empty);
+
+                BinFor.Serialize(TransferStream, signal);
+
+                Data RecvData = (Data)BinFor.Deserialize(TransferStream);
+
+                if (RecvData.GetDataType() == 0)
+                {
+                    string ClipboardText = (string)RecvData.GetData();
+                    Clipboard.SetText(ClipboardText, TextDataFormat.UnicodeText);
+
+                    TransferStream.Close();
+                    TransferConnection.Close();
+                }
+
+                if (RecvData.GetDataType() == 1)
+                {
+                    Bitmap ClipboardImage = (Bitmap)RecvData.GetData();
+                    Clipboard.SetImage(ClipboardImage);
+
+                    TransferStream.Close();
+                    TransferConnection.Close();
+                }
+
+                if (RecvData.GetDataType() == 2)
+                {
+                    string filename = (string)RecvData.GetData();
+                    string tmpDir = Path.GetTempPath();
+                    int status = RecvData.GetStatus();
+
+                    filenames.Add(tmpDir + filename);
+
+                    using (var output = File.Create(tmpDir + filename))
+                    {
+                        var buffer = new byte[1024];
+                        int bytesRead;
+                        while ((bytesRead = TransferStream.Read(buffer, 0, buffer.Length)) > 0)
+                        {
+                            output.Write(buffer, 0, bytesRead);
+                        }
+                    }
+
+                    TransferStream.Close();
+                    TransferConnection.Close();
+
+                    do
+                    {
+                        TcpClient client = new TcpClient();
+                        client.Connect("192.168.70.128", 8082);
+
+                        NetworkStream ns = client.GetStream();
+                        BinaryFormatter bf = new BinaryFormatter();
+
+                        Data NextData = new Data(4, string.Empty);
+
+                        bf.Serialize(ns, NextData);
+
+                        NextData = (Data)bf.Deserialize(ns);
+
+                        filename = (string)NextData.GetData();
+                        tmpDir = Path.GetTempPath();
+                        status = NextData.GetStatus();
+
+                        filenames.Add(tmpDir + filename);
+
+                        using (var output = File.Create(tmpDir + filename))
+                        {
+                            var buffer = new byte[1024];
+                            int bytesRead;
+                            while ((bytesRead = ns.Read(buffer, 0, buffer.Length)) > 0)
+                            {
+                                output.Write(buffer, 0, bytesRead);
+                            }
+                        }
+
+                        ns.Close();
+                        client.Close();
+                    }
+                    while (status != 0);
+
+                    /* Set clipboard cut operation */
+                    /*-----------------------------------------------------------------------*/
+                    byte[] moveEffect = { 2, 0, 0, 0 };
+                    MemoryStream dropEffect = new MemoryStream();
+                    dropEffect.Write(moveEffect, 0, moveEffect.Length);
+
+                    DataObject data = new DataObject("Preferred DropEffect", dropEffect);
+                    data.SetFileDropList(filenames);
+                    /*-----------------------------------------------------------------------*/
+
+                    Clipboard.SetDataObject(data, true);
+
+                    MessageBox.Show("Files successfully copied.");
+
+                    filenames.Clear();
+                } 
+            }
+            else
+                SendKeys(e);
         }
+
         public string KeyCodeToUnicode(Keys key)
         {
             byte[] keyboardState = new byte[255];
@@ -217,6 +415,22 @@ namespace screenSharing
             ToUnicodeEx(virtualKeyCode, scanCode, keyboardState, result, (int)5, (uint)0, inputLocaleIdentifier);
 
             return result.ToString();
+        }
+
+        void SendKeys(PreviewKeyDownEventArgs e)
+        {
+            Point p = System.Windows.Forms.Control.MousePosition;
+            NetworkStream ns1 = client1.GetStream();
+            BinaryFormatter binFor = new BinaryFormatter();
+            if (e.KeyCode == Keys.Enter)
+            {
+                sendBack inf1 = new sendBack(p, false, false, false, false, false, false, "enter");
+                binFor.Serialize(ns1, inf1);
+                return;
+            }
+            string keyPressed = KeyCodeToUnicode(e.KeyCode);
+            sendBack inf = new sendBack(p, false, false, false, false, false, false, keyPressed);
+            binFor.Serialize(ns1, inf);
         }
 
         [DllImport("user32.dll")]

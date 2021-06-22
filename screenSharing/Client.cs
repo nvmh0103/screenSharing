@@ -13,6 +13,7 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Threading;
 using System.Net;
 using System.IO;
+using System.Collections.Specialized;
 
 namespace screenSharing
 {
@@ -22,6 +23,8 @@ namespace screenSharing
         private TcpClient client1 = new TcpClient();
         private NetworkStream ns;
         bool isClick = true;
+
+        private StringCollection filenames = new StringCollection();
         public Client()
         {
             InitializeComponent();
@@ -81,8 +84,29 @@ namespace screenSharing
 
         private void Client_Load(object sender, EventArgs e)
         {
+            CheckForIllegalCrossThreadCalls = false;
+
             Thread server = new Thread(new ThreadStart(serverThread));
             server.Start();
+
+            // Bắt đầu nhận Data Connection
+            Thread RecvData = new Thread(new ThreadStart(RecvFileConnection));
+            RecvData.Start();
+        }
+
+        private void RecvFileConnection()
+        {
+            TcpListener listener = new TcpListener(IPAddress.Any, 8082);
+
+            listener.Start();
+            while (true)
+            {
+                TcpClient RecvClient = listener.AcceptTcpClient();
+
+                Thread RecvThread = new Thread(StartTransfering);
+                RecvThread.SetApartmentState(ApartmentState.STA);
+                RecvThread.Start(RecvClient);
+            }
         }
 
         private void serverThread()
@@ -158,7 +182,7 @@ namespace screenSharing
 
             /*26.242.248.193*/
             /*192.168.1.11*/
-            client.Connect("192.168.1.11", 8080);
+            client.Connect("192.168.1.9", 8080);
 
 
         }
@@ -170,6 +194,133 @@ namespace screenSharing
             Thread mouse = new Thread(new ThreadStart(mouseMovement));
             mouse.Start();
 
+        }
+
+        private void StartTransfering(object obj)
+        {
+            TcpClient TransferConnection = (TcpClient)obj;
+
+            NetworkStream TransferStream = TransferConnection.GetStream();
+            BinaryFormatter BinFor = new BinaryFormatter();
+
+            Data RecvData = (Data)BinFor.Deserialize(TransferStream);
+
+            if (RecvData.GetDataType() == 0)
+            {
+                string ClipboardText = (string)(RecvData.GetData());
+                Clipboard.SetText(ClipboardText, TextDataFormat.UnicodeText);
+
+                // Gửi tín hiệu xử lý xong
+                BinFor.Serialize(TransferStream, 0);
+
+                TransferStream.Close();
+                TransferConnection.Close();
+            }
+
+            if (RecvData.GetDataType() == 1)
+            {
+                Bitmap ClipboardImage = (Bitmap)(RecvData.GetData());
+                Clipboard.SetImage(ClipboardImage);
+
+                // Gửi tín hiệu xử lý xong
+                BinFor.Serialize(TransferStream, 0);
+
+                TransferStream.Close();
+                TransferConnection.Close();
+            }
+
+            if (RecvData.GetDataType() == 2)
+            {
+                /* Lưu file vào temp folder trước, rồi thực hiện cut */
+                string filename = (string)RecvData.GetData();
+                string tmpDir = Path.GetTempPath();
+
+                filenames.Add(tmpDir + filename);
+
+                using (var output = File.Create(tmpDir + filename))
+                {
+                    var buffer = new byte[1024];
+                    int bytesRead;
+                    while ((bytesRead = TransferStream.Read(buffer, 0, buffer.Length)) > 0)
+                    {
+                        output.Write(buffer, 0, bytesRead);
+                    }
+                }
+            }
+
+            if (RecvData.GetDataType() == 3)
+            {
+                /* Set clipboard operation = cut */
+                /*----------------------------------------------------------------------*/
+                byte[] moveEffect = { 2, 0, 0, 0 };
+
+                MemoryStream dropEffect = new MemoryStream();
+                dropEffect.Write(moveEffect, 0, moveEffect.Length);
+
+                DataObject data = new DataObject("Preferred DropEffect", dropEffect);
+                data.SetFileDropList(filenames);
+                /*----------------------------------------------------------------------*/
+
+                Clipboard.SetDataObject(data, true);
+                filenames.Clear();
+
+                BinFor.Serialize(TransferStream, 0);
+
+                TransferStream.Close();
+                TransferConnection.Close();
+            }
+
+            // Truyền dữ liệu từ client sang server
+            if (RecvData.GetDataType() == 4)
+            {
+                IDataObject DataObject = Clipboard.GetDataObject();
+
+                if (DataObject.GetDataPresent(DataFormats.UnicodeText))
+                {
+                    string text = (string)DataObject.GetData(DataFormats.UnicodeText);
+                    Data SendData = new Data(0, text);
+
+                    BinFor.Serialize(TransferStream, SendData);
+
+                    TransferStream.Close();
+                    TransferConnection.Close();
+                }
+
+                if (DataObject.GetDataPresent(DataFormats.Bitmap))
+                {
+                    Bitmap image = (Bitmap)DataObject.GetData(DataFormats.Bitmap);
+                    Data SendData = new Data(1, image);
+
+                    BinFor.Serialize(TransferStream, SendData);
+
+                    TransferStream.Close();
+                    TransferConnection.Close();
+                }
+
+                if (DataObject.GetDataPresent(DataFormats.FileDrop))
+                {
+                    Data FileHeader = null;
+
+                    if (filenames.Count == 0)
+                        filenames = Clipboard.GetFileDropList();
+
+                    string filename = Path.GetFileName(filenames[0]);
+
+                    if (filenames.Count > 1)
+                        FileHeader = new Data(2, 1, filename);
+                    else
+                        FileHeader = new Data(2, 0, filename);
+                    
+                    BinFor.Serialize(TransferStream, FileHeader);
+
+                    TransferConnection.Client.SendFile(filenames[0]);
+
+                    TransferStream.Close();
+                    TransferConnection.Close();
+
+                    filenames.RemoveAt(0);
+                }
+            }
         }
 
         private void Client_FormClosing(object sender, FormClosingEventArgs e)
@@ -185,4 +336,3 @@ namespace screenSharing
         }
     }
 }
-
