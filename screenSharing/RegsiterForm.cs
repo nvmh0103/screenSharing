@@ -20,6 +20,8 @@ namespace screenSharing
         {
             InitializeComponent();
             newClient = client;
+            textBox4.PasswordChar = '*';
+            textBox5.PasswordChar = '*';
         }
 
         private void label3_Click(object sender, EventArgs e)
@@ -51,6 +53,11 @@ namespace screenSharing
                     }
                 }
             }
+            if (textBox4.Text != textBox5.Text)
+            {
+                MessageBox.Show("Password doesnt match!","Error");
+                return;
+            }
             Users userDetails = new Users(textBox1.Text, textBox2.Text, textBox4.Text, ipAddress, res);
             await createUser(userDetails);
             Close();
@@ -69,6 +76,26 @@ namespace screenSharing
                 MessageBox.Show("Account cant be created!", "Message");
             }
             return response.Headers.Location;
+        }
+
+        private void textBox4_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void textBox5_TextChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            textBox4.PasswordChar = checkBox1.Checked ? '\0' : '*'; 
+        }
+
+        private void checkBox2_CheckedChanged(object sender, EventArgs e)
+        {
+            textBox5.PasswordChar = checkBox2.Checked ? '\0' : '*';
         }
     }
 }

@@ -19,6 +19,7 @@ namespace screenSharing
         public LoginForm()
         {
             InitializeComponent();
+            textBox2.PasswordChar = '*';
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -62,6 +63,11 @@ namespace screenSharing
             }
             return response.Headers.Location;
 
+        }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            textBox2.PasswordChar = checkBox1.Checked ? '\0' : '*';
         }
     }
 }
