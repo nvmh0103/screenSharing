@@ -67,6 +67,7 @@ namespace screenSharing
                 client = server.AcceptTcpClient();
             }
             getImage.Start();
+            
         }
         private void stopListening()
         {
@@ -89,7 +90,6 @@ namespace screenSharing
         }
         private void receiveImage()
         {
-            connect();
             BinaryFormatter binFor = new BinaryFormatter();
             while (client.Connected)
             {
@@ -103,6 +103,11 @@ namespace screenSharing
 
         private void Viewer_Load(object sender, EventArgs e)
         {
+            // maximize windows
+            this.WindowState = FormWindowState.Maximized;
+            server = new TcpListener(IPAddress.Any, 8080);
+            Listen.Start();
+            
             // get the profile of connecting client.
             List<Users> users = Task.Run(async () => await GetAllUsers("https://csharpbe.herokuapp.com/getAllUser")).Result;
             foreach (Users user in users)
@@ -113,10 +118,9 @@ namespace screenSharing
                     break;
                 }
             }
-            // maximize windows
-            this.WindowState = FormWindowState.Maximized;
-            server = new TcpListener(IPAddress.Any, 8080);
-            Listen.Start();
+            connect();
+
+
         }
 
         private void Viewer_FormClosing(object sender, FormClosingEventArgs e)

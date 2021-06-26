@@ -93,7 +93,7 @@ namespace screenSharing
         private void ListOfUsers_Load(object sender, EventArgs e)
         {
             users = Task.Run(async () => await GetAllUsers("https://csharpbe.herokuapp.com/getAllUser")).Result;
-            /*users = await GetAllUsers("https://csharpbe.herokuapp.com/getAllUser");*/
+            
             foreach (Users user in users)
             {
                 if (user.getEmail().Equals(currentUser))
@@ -122,8 +122,8 @@ namespace screenSharing
 
         private void button1_Click(object sender, EventArgs e)
         {
-            Thread clientListen = new Thread(new ThreadStart(clientReceiveMessage));
-            clientListen.Start();
+            //Listen.Suspend();
+
             foreach (Users user in users)
             {
                 if (user.getEmail().Equals(comboBox1.Text))
@@ -135,13 +135,20 @@ namespace screenSharing
 
             }
             networkClient.Connect(connectingTo.getIpAddress(), 8080);
+            Thread clientListen = new Thread(new ThreadStart(clientReceiveMessage));
+            clientListen.Start();
             if (networkClient.Connected)
             {
                 NetworkStream ns = networkClient.GetStream();
-                String connect = "Connect from " + comboBox1.Text;
+                String connect = "Connect from " + currentUser;
                 byte[] sendData = Encoding.UTF8.GetBytes(connect);
                 ns.Write(sendData, 0, sendData.Length);
             }
+        }
+
+        private void button2_Click(object sender, EventArgs e)
+        {
+            Listen.Start();
         }
     }
 }

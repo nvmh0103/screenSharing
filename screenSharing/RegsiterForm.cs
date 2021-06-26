@@ -33,7 +33,7 @@ namespace screenSharing
             int _ScreenWidth = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width;
             int _ScreenHeight = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height;
             res = _ScreenWidth + "x" + _ScreenHeight;
-            foreach (NetworkInterface ni in NetworkInterface.GetAllNetworkInterfaces())
+            /*foreach (NetworkInterface ni in NetworkInterface.GetAllNetworkInterfaces())
             {
                 if (ni.NetworkInterfaceType == NetworkInterfaceType.Ethernet)
                 {
@@ -50,7 +50,8 @@ namespace screenSharing
                         }
                     }
                 }
-            }
+            }*/
+            ipAddress = "25.28.82.253";
             Users userDetails = new Users(textBox1.Text, textBox2.Text, textBox4.Text, ipAddress, res);
             await createUser(userDetails);
             Close();
