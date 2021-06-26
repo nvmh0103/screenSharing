@@ -28,7 +28,7 @@ namespace screenSharing
         bool isClick = true;
         string userClientGlobal;
         string userServerGlobal;
-        Users clientUser;
+
         Users serverUser;
 
 
@@ -36,7 +36,6 @@ namespace screenSharing
         public Server(String clientUser,String serverUser)
         {
             InitializeComponent();
-            userClientGlobal = clientUser;
             userServerGlobal = serverUser.Trim('\n','\r','\0',' ');
 
 
@@ -114,10 +113,6 @@ namespace screenSharing
 
             foreach (Users user in users)
             {
-                if (user.getEmail().Equals(userClientGlobal))
-                {
-                    clientUser = user;
-                }
                 if (user.getEmail().Equals(userServerGlobal))
                 {
                     serverUser = user;
@@ -126,18 +121,12 @@ namespace screenSharing
 
             label1.Text = "Accepted connection from " + serverUser.getEmail();
 
-            
-
-        
-            
             /*192.168.1.9*/
             client.Connect(serverUser.getIpAddress(), 8080);
 
             Thread startSending = new Thread(new ThreadStart(send));
             startSending.Start();
 
-
-            
 
             // Bắt đầu nhận Data Connection
             Thread RecvData = new Thread(new ThreadStart(RecvFileConnection));
@@ -180,10 +169,9 @@ namespace screenSharing
                 Point current = inf.getMouse();
                 // do calculate to make mouse move correctly.
                 int clientX, clientY, serverX, serverY;
-                string[] stringSplitClient = clientUser.getRes().Split('x');
                 string[] stringSplitServer = inf.getRes().Split('x');
-                clientX = Int32.Parse(stringSplitClient[0]);
-                clientY = Int32.Parse(stringSplitClient[1]);
+                clientX = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width;
+                clientY = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height;
                 serverX = Int32.Parse(stringSplitServer[0]);
                 serverY = Int32.Parse(stringSplitServer[1]);
 

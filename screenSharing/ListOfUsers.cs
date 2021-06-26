@@ -148,8 +148,13 @@ namespace screenSharing
 
         private void button2_Click(object sender, EventArgs e)
         {
-            Listen.Start();
+            
 
+        }
+
+        private void button2_Click_1(object sender, EventArgs e)
+        {
+            Listen.Start();
         }
     }
 }
