@@ -105,8 +105,10 @@ namespace screenSharing
 
         private void Client_Load(object sender, EventArgs e)
         {
+            Thread server = new Thread(new ThreadStart(serverThread));
+            server.Start();
+
             
-            CheckForIllegalCrossThreadCalls = false;
             // get profile of client and server 
             List<Users> users = Task.Run(async () => await GetAllUsers("https://csharpbe.herokuapp.com/getAllUser")).Result;
 
@@ -124,8 +126,7 @@ namespace screenSharing
 
             label1.Text = "Accepted connection from " + serverUser.getEmail();
 
-            Thread server = new Thread(new ThreadStart(serverThread));
-            server.Start();
+            
 
         
             
@@ -134,8 +135,9 @@ namespace screenSharing
 
             Thread startSending = new Thread(new ThreadStart(send));
             startSending.Start();
-            Thread mouse = new Thread(new ThreadStart(mouseMovement));
-            mouse.Start();
+
+
+            
 
             // Bắt đầu nhận Data Connection
             Thread RecvData = new Thread(new ThreadStart(RecvFileConnection));
@@ -165,6 +167,8 @@ namespace screenSharing
                 server.Start();
                 client1 = server.AcceptTcpClient();
             }
+            Thread mouse = new Thread(new ThreadStart(mouseMovement));
+            mouse.Start();
         }
         private void mouseMovement()
         {
@@ -386,6 +390,7 @@ namespace screenSharing
             isClick = false;
             ns.Close();
             client.Close();
+            
         }
 
         private void textBox1_TextChanged(object sender, EventArgs e)
