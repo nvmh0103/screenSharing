@@ -29,7 +29,7 @@ namespace screenSharing
         {
             InitializeComponent();
             currentUser = email;
-            label1.Text += email + " !";
+            label1.Text += email + "!";
             richTextBox1.ReadOnly = true;
             comboBox1.DropDownStyle = ComboBoxStyle.DropDownList;
             Listen = new Thread(startListening);
@@ -140,6 +140,26 @@ namespace screenSharing
                 byte[] sendData = Encoding.UTF8.GetBytes(connect);
                 ns.Write(sendData, 0, sendData.Length);
             }
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label3_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label4_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label2_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

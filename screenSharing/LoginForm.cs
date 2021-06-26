@@ -63,7 +63,5 @@ namespace screenSharing
             return response.Headers.Location;
 
         }
-           
-        
     }
 }
