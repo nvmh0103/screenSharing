@@ -105,6 +105,7 @@ namespace screenSharing
 
         private void Client_Load(object sender, EventArgs e)
         {
+            
             CheckForIllegalCrossThreadCalls = false;
             // get profile of client and server 
             List<Users> users = Task.Run(async () => await GetAllUsers("https://csharpbe.herokuapp.com/getAllUser")).Result;
@@ -176,22 +177,17 @@ namespace screenSharing
                 // do calculate to make mouse move correctly.
                 int clientX, clientY, serverX, serverY;
                 string[] stringSplitClient = clientUser.getRes().Split('x');
-                string[] stringSplitServer = serverUser.getRes().Split('x');
+                string[] stringSplitServer = inf.getRes().Split('x');
                 clientX = Int32.Parse(stringSplitClient[0]);
                 clientY = Int32.Parse(stringSplitClient[1]);
                 serverX = Int32.Parse(stringSplitServer[0]);
                 serverY = Int32.Parse(stringSplitServer[1]);
 
                 // change mouse coordinate base on client and server resolution
-                if (clientX >= serverX)
-                {
-                    current.X = current.X * clientX / serverX;
-                    current.Y = current.Y * clientY / serverY;
-                } else
-                {
-                    current.X = current.X * serverX / clientX;
-                    current.Y = current.Y * serverY / clientY;
-                }
+                
+                 current.X = current.X * clientX / serverX;
+                 current.Y = current.Y * clientY / serverY;
+               
 
                 
                 Cursor.Position = current;

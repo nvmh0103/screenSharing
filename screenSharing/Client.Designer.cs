@@ -59,6 +59,7 @@ namespace screenSharing
             this.Text = "Client";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Viewer_FormClosing);
             this.Load += new System.EventHandler(this.Viewer_Load);
+            this.ResizeEnd += new System.EventHandler(this.Client_ResizeEnd);
             this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.Viewer_MouseMove);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
