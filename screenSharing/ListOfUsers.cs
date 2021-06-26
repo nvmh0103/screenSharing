@@ -106,7 +106,6 @@ namespace screenSharing
 
             }
             server = new TcpListener(IPAddress.Any, 8080);
-            Listen.Start();
 
         }
         private void startListening()

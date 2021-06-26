@@ -40,7 +40,7 @@ namespace screenSharing
             // textBox1
             // 
             this.textBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBox1.Location = new System.Drawing.Point(332, 122);
+            this.textBox1.Location = new System.Drawing.Point(332, 101);
             this.textBox1.Name = "textBox1";
             this.textBox1.Size = new System.Drawing.Size(214, 31);
             this.textBox1.TabIndex = 0;
@@ -48,7 +48,7 @@ namespace screenSharing
             // textBox2
             // 
             this.textBox2.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.textBox2.Location = new System.Drawing.Point(332, 183);
+            this.textBox2.Location = new System.Drawing.Point(332, 173);
             this.textBox2.Name = "textBox2";
             this.textBox2.Size = new System.Drawing.Size(214, 31);
             this.textBox2.TabIndex = 1;
@@ -57,7 +57,7 @@ namespace screenSharing
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(178, 128);
+            this.label1.Location = new System.Drawing.Point(178, 101);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(65, 25);
             this.label1.TabIndex = 2;
@@ -67,7 +67,7 @@ namespace screenSharing
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.Location = new System.Drawing.Point(178, 186);
+            this.label2.Location = new System.Drawing.Point(178, 173);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(106, 25);
             this.label2.TabIndex = 3;
