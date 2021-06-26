@@ -35,8 +35,10 @@ namespace screenSharing
             this.label3 = new System.Windows.Forms.Label();
             this.button1 = new System.Windows.Forms.Button();
             this.comboBox1 = new System.Windows.Forms.ComboBox();
+
             this.label4 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
+
             this.SuspendLayout();
             // 
             // richTextBox1
@@ -116,6 +118,7 @@ namespace screenSharing
             this.comboBox1.Size = new System.Drawing.Size(316, 37);
             this.comboBox1.TabIndex = 6;
             // 
+
             // label4
             // 
             this.label4.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(255)))), ((int)(((byte)(197)))));
@@ -139,9 +142,11 @@ namespace screenSharing
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(27)))), ((int)(((byte)(20)))), ((int)(((byte)(100)))));
             this.ClientSize = new System.Drawing.Size(789, 493);
             this.Controls.Add(this.label4);
+
             this.Controls.Add(this.comboBox1);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.label3);
@@ -166,7 +171,9 @@ namespace screenSharing
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.ComboBox comboBox1;
+
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label5;
+
     }
 }

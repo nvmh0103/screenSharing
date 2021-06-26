@@ -43,6 +43,7 @@ namespace screenSharing
             this.pictureBox1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox1.TabIndex = 0;
             this.pictureBox1.TabStop = false;
+            this.pictureBox1.Click += new System.EventHandler(this.pictureBox1_Click);
             this.pictureBox1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.pictureBox1_MouseClick);
             this.pictureBox1.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.pictureBox1_MouseDoubleClick);
             this.pictureBox1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pictureBox1_MouseDown);
@@ -61,6 +62,7 @@ namespace screenSharing
             this.Text = "Screen Sharing (Client)";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Viewer_FormClosing);
             this.Load += new System.EventHandler(this.Viewer_Load);
+            this.ResizeEnd += new System.EventHandler(this.Client_ResizeEnd);
             this.MouseMove += new System.Windows.Forms.MouseEventHandler(this.Viewer_MouseMove);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);

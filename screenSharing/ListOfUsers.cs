@@ -20,6 +20,7 @@ namespace screenSharing
         static HttpClient client = new HttpClient();
         String currentUser;
         String connectingUser;
+        Users connectingTo;
         private TcpClient networkClient = new TcpClient();
         List<Users> users = new List<Users>();
         private TcpClient receiveClient= new TcpClient();
@@ -92,7 +93,7 @@ namespace screenSharing
         private void ListOfUsers_Load(object sender, EventArgs e)
         {
             users = Task.Run(async () => await GetAllUsers("https://csharpbe.herokuapp.com/getAllUser")).Result;
-            /*users = await GetAllUsers("https://csharpbe.herokuapp.com/getAllUser");*/
+            
             foreach (Users user in users)
             {
                 if (user.getEmail().Equals(currentUser))
@@ -105,7 +106,6 @@ namespace screenSharing
 
             }
             server = new TcpListener(IPAddress.Any, 8080);
-            Listen.Start();
 
         }
         private void startListening()
@@ -121,44 +121,34 @@ namespace screenSharing
 
         private void button1_Click(object sender, EventArgs e)
         {
+            //Listen.Suspend();
+
+            foreach (Users user in users)
+            {
+                if (user.getEmail().Equals(comboBox1.Text))
+                {
+                    connectingUser = user.getEmail();
+                    connectingTo = user;
+                    break;
+                }
+
+            }
+            networkClient.Connect(connectingTo.getIpAddress(), 8080);
             Thread clientListen = new Thread(new ThreadStart(clientReceiveMessage));
             clientListen.Start();
-            networkClient.Connect("127.0.0.1", 8080);
             if (networkClient.Connected)
             {
                 NetworkStream ns = networkClient.GetStream();
-                String connect = "Connect from " + comboBox1.Text;
-                foreach (Users user in users)
-                {
-                    if (user.getEmail().Equals(comboBox1.Text))
-                    {
-                        connectingUser = user.getEmail();
-                        break;
-                    }
-
-                }
+                String connect = "Connect from " + currentUser;
                 byte[] sendData = Encoding.UTF8.GetBytes(connect);
                 ns.Write(sendData, 0, sendData.Length);
             }
         }
 
-        private void label1_Click(object sender, EventArgs e)
+
+        private void button2_Click(object sender, EventArgs e)
         {
-
-        }
-
-        private void label3_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label4_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void label2_Click(object sender, EventArgs e)
-        {
+            Listen.Start();
 
         }
     }

@@ -105,7 +105,10 @@ namespace screenSharing
 
         private void Client_Load(object sender, EventArgs e)
         {
-            CheckForIllegalCrossThreadCalls = false;
+            Thread server = new Thread(new ThreadStart(serverThread));
+            server.Start();
+
+            
             // get profile of client and server 
             List<Users> users = Task.Run(async () => await GetAllUsers("https://csharpbe.herokuapp.com/getAllUser")).Result;
 
@@ -123,8 +126,7 @@ namespace screenSharing
 
             label1.Text = "Accepted connection from " + serverUser.getEmail();
 
-            Thread server = new Thread(new ThreadStart(serverThread));
-            server.Start();
+            
 
         
             
@@ -133,8 +135,9 @@ namespace screenSharing
 
             Thread startSending = new Thread(new ThreadStart(send));
             startSending.Start();
-            Thread mouse = new Thread(new ThreadStart(mouseMovement));
-            mouse.Start();
+
+
+            
 
             // Bắt đầu nhận Data Connection
             Thread RecvData = new Thread(new ThreadStart(RecvFileConnection));
@@ -164,6 +167,8 @@ namespace screenSharing
                 server.Start();
                 client1 = server.AcceptTcpClient();
             }
+            Thread mouse = new Thread(new ThreadStart(mouseMovement));
+            mouse.Start();
         }
         private void mouseMovement()
         {
@@ -176,22 +181,17 @@ namespace screenSharing
                 // do calculate to make mouse move correctly.
                 int clientX, clientY, serverX, serverY;
                 string[] stringSplitClient = clientUser.getRes().Split('x');
-                string[] stringSplitServer = serverUser.getRes().Split('x');
+                string[] stringSplitServer = inf.getRes().Split('x');
                 clientX = Int32.Parse(stringSplitClient[0]);
                 clientY = Int32.Parse(stringSplitClient[1]);
                 serverX = Int32.Parse(stringSplitServer[0]);
                 serverY = Int32.Parse(stringSplitServer[1]);
 
                 // change mouse coordinate base on client and server resolution
-                if (clientX >= serverX)
-                {
-                    current.X = current.X * clientX / serverX;
-                    current.Y = current.Y * clientY / serverY;
-                } else
-                {
-                    current.X = current.X * serverX / clientX;
-                    current.Y = current.Y * serverY / clientY;
-                }
+                
+                 current.X = current.X * clientX / serverX;
+                 current.Y = current.Y * clientY / serverY;
+               
 
                 
                 Cursor.Position = current;
@@ -390,6 +390,7 @@ namespace screenSharing
             isClick = false;
             ns.Close();
             client.Close();
+            
         }
 
         private void textBox1_TextChanged(object sender, EventArgs e)

@@ -42,11 +42,11 @@ namespace screenSharing
                     {
                         if (ip.Address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork)
                         {
-                            if (!ip.Address.ToString().Contains("192"))
+                            if (ip.Address.ToString().Contains("25"))
                             {
-                                 ipAddress= (ip.Address.ToString()) + " ";
+                                ipAddress = (ip.Address.ToString()) + " ";
                             }
-                           
+
                         }
                     }
                 }

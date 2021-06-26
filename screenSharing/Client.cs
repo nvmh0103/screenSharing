@@ -67,6 +67,7 @@ namespace screenSharing
                 client = server.AcceptTcpClient();
             }
             getImage.Start();
+            
         }
         private void stopListening()
         {
@@ -89,7 +90,6 @@ namespace screenSharing
         }
         private void receiveImage()
         {
-            connect();
             BinaryFormatter binFor = new BinaryFormatter();
             while (client.Connected)
             {
@@ -103,6 +103,11 @@ namespace screenSharing
 
         private void Viewer_Load(object sender, EventArgs e)
         {
+            // maximize windows
+            this.WindowState = FormWindowState.Maximized;
+            server = new TcpListener(IPAddress.Any, 8080);
+            Listen.Start();
+            
             // get the profile of connecting client.
             List<Users> users = Task.Run(async () => await GetAllUsers("https://csharpbe.herokuapp.com/getAllUser")).Result;
             foreach (Users user in users)
@@ -113,10 +118,9 @@ namespace screenSharing
                     break;
                 }
             }
-            // maximize windows
-            this.WindowState = FormWindowState.Maximized;
-            server = new TcpListener(IPAddress.Any, 8080);
-            Listen.Start();
+            connect();
+
+
         }
 
         private void Viewer_FormClosing(object sender, FormClosingEventArgs e)
@@ -156,12 +160,14 @@ namespace screenSharing
                 // trigger a drag and drop mouse event
                 if (e.Button == MouseButtons.Left)
                 {
-                    sendBack inf1 = new sendBack(cursor, false, false, false, true,false,false,"");
+                    string res = this.Width.ToString() + "x" + this.Height.ToString();
+                    sendBack inf1 = new sendBack(cursor,res, false, false, false, true,false,false,"");
                     binFor.Serialize(sendBackStream, inf1);
                     return;
                 }
                 // send mouse coordinate 
-                sendBack inf = new sendBack(cursor, false, false, false,false,false,false,"");
+                string res1 = this.Width.ToString() + "x" + this.Height.ToString();
+                sendBack inf = new sendBack(cursor,res1,false, false, false,false,false,false,"");
                 binFor.Serialize(sendBackStream, inf);
             }
         }
@@ -174,11 +180,13 @@ namespace screenSharing
             // scroll forward
             if (e.Delta > 0)
             {
-                sendBack inf = new sendBack(cursor, false, false, false, false, true, false,"");
+                string res = this.Width.ToString() + "x" + this.Height.ToString();
+                sendBack inf = new sendBack(cursor,res,false, false, false, false, true, false,"");
                 binFor.Serialize(sendBackStream, inf);
             } else //scroll backward
             {
-                sendBack inf = new sendBack(cursor, false, false, false, false, false, true,"");
+                string res = this.Width.ToString() + "x" + this.Height.ToString();
+                sendBack inf = new sendBack(cursor,res,false, false, false, false, false, true,"");
                 binFor.Serialize(sendBackStream, inf);
             }
         }
@@ -193,13 +201,15 @@ namespace screenSharing
                 // Left click
                 if (e.Button == MouseButtons.Left)
                 {
-                    sendBack inf = new sendBack(cursor, true, false, false,false,false,false,"");
+                    string res = this.Width.ToString() + "x" + this.Height.ToString();
+                    sendBack inf = new sendBack(cursor,res, true, false, false,false,false,false,"");
                     binFor.Serialize(sendBackStream, inf);
                 }
                 // right click
                 else if (e.Button == MouseButtons.Right)
                 {
-                    sendBack inf1 = new sendBack(cursor, false, false, true,false,false,false,"");
+                    string res = this.Width.ToString() + "x" + this.Height.ToString();
+                    sendBack inf1 = new sendBack(cursor,res, false, false, true,false,false,false,"");
                     binFor.Serialize(sendBackStream, inf1);
                 }
             }
@@ -212,7 +222,8 @@ namespace screenSharing
                 NetworkStream sendBackStream = receiveMouseAndKeyboard.GetStream();
                 BinaryFormatter binFor = new BinaryFormatter();
                 Point cursor = new Point(e.X, e.Y);
-                sendBack inf = new sendBack(cursor, false, true, false,false,false,false,"");
+                string res = this.Width.ToString() + "x" + this.Height.ToString();
+                sendBack inf = new sendBack(cursor,res, false, true, false,false,false,false,"");
                 binFor.Serialize(sendBackStream, inf);
             }
         }
@@ -468,12 +479,14 @@ namespace screenSharing
             BinaryFormatter binFor = new BinaryFormatter();
             if (e.KeyCode == Keys.Enter)
             {
-                sendBack inf1 = new sendBack(p, false, false, false, false, false, false, "enter");
+                string res = this.Width.ToString() + "x" + this.Height.ToString();
+                sendBack inf1 = new sendBack(p,res, false, false, false, false, false, false, "enter");
                 binFor.Serialize(sendBackStream, inf1);
                 return;
             }
             string keyPressed = KeyCodeToUnicode(e.KeyCode);
-            sendBack inf = new sendBack(p, false, false, false, false, false, false, keyPressed);
+            string res1 = this.Width.ToString() + "x" + this.Height.ToString();
+            sendBack inf = new sendBack(p,res1, false, false, false, false, false, false, keyPressed);
             binFor.Serialize(sendBackStream, inf);
         }
 
@@ -489,6 +502,15 @@ namespace screenSharing
         [DllImport("user32.dll")]
         static extern int ToUnicodeEx(uint wVirtKey, uint wScanCode, byte[] lpKeyState, [Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pwszBuff, int cchBuff, uint wFlags, IntPtr dwhkl);
 
+        private void Client_ResizeEnd(object sender, EventArgs e)
+        {
+           
+        }
+
+        private void pictureBox1_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 
 }
