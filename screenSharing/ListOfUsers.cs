@@ -20,6 +20,7 @@ namespace screenSharing
         static HttpClient client = new HttpClient();
         String currentUser;
         String connectingUser;
+        Users connectingTo;
         private TcpClient networkClient = new TcpClient();
         List<Users> users = new List<Users>();
         private TcpClient receiveClient= new TcpClient();
@@ -123,20 +124,21 @@ namespace screenSharing
         {
             Thread clientListen = new Thread(new ThreadStart(clientReceiveMessage));
             clientListen.Start();
-            networkClient.Connect("127.0.0.1", 8080);
+            foreach (Users user in users)
+            {
+                if (user.getEmail().Equals(comboBox1.Text))
+                {
+                    connectingUser = user.getEmail();
+                    connectingTo = user;
+                    break;
+                }
+
+            }
+            networkClient.Connect(connectingTo.getIpAddress(), 8080);
             if (networkClient.Connected)
             {
                 NetworkStream ns = networkClient.GetStream();
                 String connect = "Connect from " + comboBox1.Text;
-                foreach (Users user in users)
-                {
-                    if (user.getEmail().Equals(comboBox1.Text))
-                    {
-                        connectingUser = user.getEmail();
-                        break;
-                    }
-
-                }
                 byte[] sendData = Encoding.UTF8.GetBytes(connect);
                 ns.Write(sendData, 0, sendData.Length);
             }
