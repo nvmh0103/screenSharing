@@ -134,7 +134,9 @@ namespace screenSharing
 
             }
             networkClient.Connect(connectingTo.getIpAddress(), 8080);
+            
             Thread clientListen = new Thread(new ThreadStart(clientReceiveMessage));
+            clientListen.SetApartmentState(ApartmentState.STA);
             clientListen.Start();
             if (networkClient.Connected)
             {

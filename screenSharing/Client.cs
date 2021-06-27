@@ -33,6 +33,7 @@ namespace screenSharing
         private StringCollection filenames = new StringCollection();
         string currentUser;
         Users activeUser;
+
         public Client(String users)
         {
             InitializeComponent();
@@ -119,8 +120,6 @@ namespace screenSharing
                 }
             }
             connect();
-
-
         }
 
         private void Viewer_FormClosing(object sender, FormClosingEventArgs e)
@@ -237,7 +236,7 @@ namespace screenSharing
         {
             pictureBox1.Focus();
         }
-        
+
         // Gửi input
         private void pictureBox1_KeyDown(object sender, PreviewKeyDownEventArgs e)
         {
@@ -344,6 +343,8 @@ namespace screenSharing
             else if ((e.KeyCode == Keys.C || e.KeyCode == Keys.X) && ModifierKeys.HasFlag(Keys.Control))
             {
                 SendKeys(e);
+
+                Thread.Sleep(500);
                 
                 TcpClient TransferConnection = new TcpClient();
                 TransferConnection.Connect(activeUser.getIpAddress(), 8082);
@@ -396,7 +397,7 @@ namespace screenSharing
                     TransferStream.Close();
                     TransferConnection.Close();
 
-                    do
+                    while (status != 0)
                     {
                         TcpClient client = new TcpClient();
                         client.Connect(activeUser.getIpAddress(), 8082);
@@ -429,7 +430,7 @@ namespace screenSharing
                         ns.Close();
                         client.Close();
                     }
-                    while (status != 0);
+                    
 
                     /* Set clipboard cut operation */
                     /*-----------------------------------------------------------------------*/
