@@ -160,13 +160,13 @@ namespace screenSharing
                 if (e.Button == MouseButtons.Left)
                 {
                     string res = this.Width.ToString() + "x" + this.Height.ToString();
-                    sendBack inf1 = new sendBack(cursor,res, false, false, false, true,false,false,"");
+                    sendBack inf1 = new sendBack(cursor,res, false, false, false, true,false,false,"",false);
                     binFor.Serialize(sendBackStream, inf1);
                     return;
                 }
                 // send mouse coordinate 
                 string res1 = this.Width.ToString() + "x" + this.Height.ToString();
-                sendBack inf = new sendBack(cursor,res1,false, false, false,false,false,false,"");
+                sendBack inf = new sendBack(cursor,res1,false, false, false,false,false,false,"",false);
                 binFor.Serialize(sendBackStream, inf);
             }
         }
@@ -180,12 +180,12 @@ namespace screenSharing
             if (e.Delta > 0)
             {
                 string res = this.Width.ToString() + "x" + this.Height.ToString();
-                sendBack inf = new sendBack(cursor,res,false, false, false, false, true, false,"");
+                sendBack inf = new sendBack(cursor,res,false, false, false, false, true, false,"",false);
                 binFor.Serialize(sendBackStream, inf);
             } else //scroll backward
             {
                 string res = this.Width.ToString() + "x" + this.Height.ToString();
-                sendBack inf = new sendBack(cursor,res,false, false, false, false, false, true,"");
+                sendBack inf = new sendBack(cursor,res,false, false, false, false, false, true,"",false);
                 binFor.Serialize(sendBackStream, inf);
             }
         }
@@ -201,14 +201,14 @@ namespace screenSharing
                 if (e.Button == MouseButtons.Left)
                 {
                     string res = this.Width.ToString() + "x" + this.Height.ToString();
-                    sendBack inf = new sendBack(cursor,res, true, false, false,false,false,false,"");
+                    sendBack inf = new sendBack(cursor,res, true, false, false,false,false,false,"",false);
                     binFor.Serialize(sendBackStream, inf);
                 }
                 // right click
                 else if (e.Button == MouseButtons.Right)
                 {
                     string res = this.Width.ToString() + "x" + this.Height.ToString();
-                    sendBack inf1 = new sendBack(cursor,res, false, false, true,false,false,false,"");
+                    sendBack inf1 = new sendBack(cursor,res, false, false, true,false,false,false,"",false);
                     binFor.Serialize(sendBackStream, inf1);
                 }
             }
@@ -222,7 +222,7 @@ namespace screenSharing
                 BinaryFormatter binFor = new BinaryFormatter();
                 Point cursor = new Point(e.X, e.Y);
                 string res = this.Width.ToString() + "x" + this.Height.ToString();
-                sendBack inf = new sendBack(cursor,res, false, true, false,false,false,false,"");
+                sendBack inf = new sendBack(cursor,res, false, true, false,false,false,false,"",false);
                 binFor.Serialize(sendBackStream, inf);
             }
         }
