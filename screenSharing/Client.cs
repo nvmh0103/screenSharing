@@ -240,7 +240,7 @@ namespace screenSharing
         // Gửi input
         private void pictureBox1_KeyDown(object sender, PreviewKeyDownEventArgs e)
         {
-            if (e.KeyCode == Keys.V && ModifierKeys.HasFlag(Keys.Control))
+            if ((e.KeyCode == Keys.V && e.Modifiers == Keys.Control))
             {
                 bool FileTransfer = false;
                 IDataObject DataObject = Clipboard.GetDataObject();
@@ -340,11 +340,11 @@ namespace screenSharing
             }
 
             // Lấy dữ liệu từ client
-            else if ((e.KeyCode == Keys.C || e.KeyCode == Keys.X) && ModifierKeys.HasFlag(Keys.Control))
+            else if ((e.KeyCode == Keys.C || e.KeyCode == Keys.X) && e.Modifiers == Keys.Control)
             {
                 SendKeys(e);
 
-                Thread.Sleep(500);
+                Thread.Sleep(2000);
                 
                 TcpClient TransferConnection = new TcpClient();
                 TransferConnection.Connect(activeUser.getIpAddress(), 8082);
@@ -481,13 +481,18 @@ namespace screenSharing
             if (e.KeyCode == Keys.Enter)
             {
                 string res = this.Width.ToString() + "x" + this.Height.ToString();
-                sendBack inf1 = new sendBack(p,res, false, false, false, false, false, false, "enter");
+                sendBack inf1 = new sendBack(p,res, false, false, false, false, false, false, "enter",false);
                 binFor.Serialize(sendBackStream, inf1);
                 return;
             }
             string keyPressed = KeyCodeToUnicode(e.KeyCode);
             string res1 = this.Width.ToString() + "x" + this.Height.ToString();
-            sendBack inf = new sendBack(p,res1, false, false, false, false, false, false, keyPressed);
+            if (e.Control)
+            {
+                sendBack inf1 = new sendBack(p, res1, false, false, false, false, false, false, keyPressed,true);
+                binFor.Serialize(sendBackStream, inf1);
+            }
+            sendBack inf = new sendBack(p,res1, false, false, false, false, false, false, keyPressed,false);
             binFor.Serialize(sendBackStream, inf);
         }
 

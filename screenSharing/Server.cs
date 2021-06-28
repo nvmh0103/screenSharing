@@ -215,7 +215,11 @@ namespace screenSharing
                 }
                 if (inf.getKeyBoard() != "")
                 {
-                    string keysReceive;
+                    string keysReceive = "";
+                    if (inf.getCtrl())
+                    {
+                        keysReceive = "{CTRL}";
+                    }
                     if (inf.getKeyBoard() == " ")
                         keysReceive = " ";
                     else if (inf.getKeyBoard() == "\t")
@@ -224,7 +228,7 @@ namespace screenSharing
                     }
                     else
                     {
-                        keysReceive = "{" + inf.getKeyBoard() + "}";
+                        keysReceive += "{" + inf.getKeyBoard() + "}";
                     }
                     SendKeys.SendWait(keysReceive);
                 }
