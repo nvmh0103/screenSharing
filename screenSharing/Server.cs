@@ -177,8 +177,8 @@ namespace screenSharing
 
                 // change mouse coordinate base on client and server resolution
                 
-                 current.X = current.X * clientX / serverX;
-                 current.Y = current.Y * clientY / serverY;
+                 current.X = current.X * clientX / serverX-20;
+                 current.Y = current.Y * clientY / serverY-20;
                
 
                 
@@ -219,9 +219,10 @@ namespace screenSharing
                     if (inf.getCtrl())
                     {
                         keysReceive = "{CTRL}";
-                    }
-                    if (inf.getKeyBoard() == " ")
+                    } else if (inf.getKeyBoard() == " ")
+                    {
                         keysReceive = " ";
+                    }
                     else if (inf.getKeyBoard() == "\t")
                     {
                         keysReceive = "{tab}";

@@ -340,7 +340,7 @@ namespace screenSharing
             }
 
             // Lấy dữ liệu từ client
-            else if ((e.KeyCode == Keys.C || e.KeyCode == Keys.X) && e.Modifiers == Keys.Control)
+            else if ((e.KeyCode == Keys.C && e.Modifiers == Keys.Control) || (e.KeyCode == Keys.X && e.Modifiers == Keys.Control) )
             {
                 SendKeys(e);
 
@@ -348,7 +348,6 @@ namespace screenSharing
                 
                 TcpClient TransferConnection = new TcpClient();
                 TransferConnection.Connect(activeUser.getIpAddress(), 8082);
-
                 NetworkStream TransferStream = TransferConnection.GetStream();
                 BinaryFormatter BinFor = new BinaryFormatter();
 
